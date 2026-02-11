@@ -29,14 +29,19 @@ COPY . .
 # Create directories for static and media files
 RUN mkdir -p staticfiles media
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Run migrations
-RUN python manage.py migrate --noinput
+# Create entrypoint script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Collecting static files..."\n\
+python manage.py collectstatic --noinput\n\
+echo "Running migrations..."\n\
+python manage.py migrate --noinput\n\
+echo "Starting Daphne server..."\n\
+exec daphne -b 0.0.0.0 -p 8000 config.asgi:application\n\
+' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Expose port
 EXPOSE 8000
 
-# Start Daphne server
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
+# Use entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]
