@@ -1,0 +1,34 @@
+# Django Core
+Django>=4.2,<5.0
+python-dotenv>=1.0.0
+
+# Channels (WebSocket support)
+channels>=4.0.0
+channels-redis>=4.1.0
+daphne>=4.0.0
+
+# Celery (Task queue)
+celery>=5.3.0
+redis>=5.0.0
+
+# CKEditor (Rich text editor)
+django-ckeditor>=6.7.0
+Pillow>=10.0.0
+
+# API & HTTP
+requests>=2.31.0
+
+# Crypto & Security
+PyNaCl>=1.5.0
+
+# Trading & Data Analysis
+ccxt>=4.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# AI/ML
+openai>=1.0.0
+
+# ASGI Server
+uvicorn>=0.23.0
+gunicorn>=21.2.0
