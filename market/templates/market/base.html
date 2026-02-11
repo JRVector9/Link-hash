@@ -75,11 +75,11 @@
         z-index: 1000;
         display: none;
         flex-direction: column;
-        padding: 20px;
-        overflow-y: auto;
+        padding: 0; /* Remove padding from container */
+        overflow-y: auto; /* Enable scrolling */
+        overflow-x: hidden;
         overscroll-behavior: contain; /* Prevent scroll chaining */
         -webkit-overflow-scrolling: touch;
-        touch-action: pan-y; /* Only vertical scroll */
       }
 
       .lhx-mobile-menu.active {
@@ -98,9 +98,17 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
+        padding: 20px 20px;
+        margin-bottom: 10px;
         border-bottom: 1px solid rgba(255,255,255,0.1);
+        position: sticky;
+        top: 0;
+        background: rgba(11, 15, 14, 0.98);
+        z-index: 1;
+      }
+
+      .lhx-mobile-menu-content {
+        padding: 0 20px 40px 20px; /* Bottom padding for last item */
       }
 
       .lhx-mobile-menu-close {
@@ -117,14 +125,21 @@
         display: block;
         color: rgba(255,255,255,0.9);
         text-decoration: none;
-        padding: 16px 0;
+        padding: 18px 0;
         font-size: 18px;
         border-bottom: 1px solid rgba(255,255,255,0.05);
         transition: color 0.2s;
+        font-weight: 500;
       }
 
-      .lhx-mobile-menu-link:hover {
+      .lhx-mobile-menu-link:hover,
+      .lhx-mobile-menu-link:active {
         color: #00ffa3;
+      }
+
+      .lhx-mobile-menu-link:last-child {
+        border-bottom: none;
+        margin-bottom: 20px;
       }
 
       .lhx-h1 {
@@ -368,20 +383,22 @@
       </div>
       <button class="lhx-mobile-menu-close" id="mobileMenuClose">&times;</button>
     </div>
-    <a class="lhx-mobile-menu-link" href="/">Signals</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'about' %}">About</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'partnership' %}">Partnership</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'campaign_list' %}">Campaigns</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'games_home' %}">Games</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'leaderboard' %}">Leaderboard</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'announcement_list' %}">Announcements</a>
-    <a class="lhx-mobile-menu-link" href="{% url 'prediction_plus' %}">Prediction+</a>
-    {% if request.session.wallet_address %}
-      <a class="lhx-mobile-menu-link" href="{% url 'profile' %}">Profile</a>
-      <a class="lhx-mobile-menu-link" href="{% url 'logout' %}">Logout</a>
-    {% else %}
-      <button class="lhx-btn mt-3" type="button" id="lhxConnectBtnMobile">Connect Wallet</button>
-    {% endif %}
+    <div class="lhx-mobile-menu-content">
+      <a class="lhx-mobile-menu-link" href="/">Signals</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'about' %}">About</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'partnership' %}">Partnership</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'campaign_list' %}">Campaigns</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'games_home' %}">Games</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'leaderboard' %}">Leaderboard</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'announcement_list' %}">Announcements</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'prediction_plus' %}">Prediction+</a>
+      {% if request.session.wallet_address %}
+        <a class="lhx-mobile-menu-link" href="{% url 'profile' %}">Profile</a>
+        <a class="lhx-mobile-menu-link" href="{% url 'logout' %}">Logout</a>
+      {% else %}
+        <button class="lhx-btn mt-3 w-100" type="button" id="lhxConnectBtnMobile">Connect Wallet</button>
+      {% endif %}
+    </div>
   </div>
 
   <script>
