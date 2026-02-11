@@ -26,12 +26,70 @@
       }
 
       .lhx-nav .container {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
       }
 
-      .lhx-navlink {
-        font-size: 14px;
-        padding: 8px 12px !important;
+      /* Hide desktop menu on mobile */
+      .lhx-nav-menu {
+        display: none !important;
+      }
+
+      /* Show hamburger button */
+      .lhx-hamburger {
+        display: flex !important;
+      }
+
+      /* Mobile menu overlay */
+      .lhx-mobile-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(11, 15, 14, 0.98);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .lhx-mobile-menu.active {
+        display: flex !important;
+      }
+
+      .lhx-mobile-menu-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .lhx-mobile-menu-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 32px;
+        cursor: pointer;
+        padding: 10px;
+        line-height: 1;
+      }
+
+      .lhx-mobile-menu-link {
+        display: block;
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        padding: 16px 0;
+        font-size: 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        transition: color 0.2s;
+      }
+
+      .lhx-mobile-menu-link:hover {
+        color: #00ffa3;
       }
 
       .lhx-h1 {
@@ -100,7 +158,15 @@
         <span class="lhx-brand">LinkHash</span>
       </div>
 
-      <div class="d-flex align-items-center gap-3">
+      <!-- Hamburger button (hidden on desktop) -->
+      <button class="lhx-hamburger" style="display: none;" id="mobileMenuBtn" type="button">
+        <span style="display:block;width:24px;height:2px;background:#fff;margin:5px 0;"></span>
+        <span style="display:block;width:24px;height:2px;background:#fff;margin:5px 0;"></span>
+        <span style="display:block;width:24px;height:2px;background:#fff;margin:5px 0;"></span>
+      </button>
+
+      <!-- Desktop menu -->
+      <div class="d-flex align-items-center gap-3 lhx-nav-menu">
         <a class="lhx-navlink" href="/">Signals</a>
         <a class="lhx-navlink" href="{% url 'about' %}">About</a>
         <a class="lhx-navlink" href="{% url 'partnership' %}">Partnership</a>
@@ -141,6 +207,61 @@
       </div>
     </div>
   </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="lhx-mobile-menu" id="mobileMenu">
+    <div class="lhx-mobile-menu-header">
+      <div class="d-flex align-items-center gap-2">
+        <span class="lhx-dot"></span>
+        <span class="lhx-brand">LinkHash</span>
+      </div>
+      <button class="lhx-mobile-menu-close" id="mobileMenuClose">&times;</button>
+    </div>
+    <a class="lhx-mobile-menu-link" href="/">Signals</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'about' %}">About</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'partnership' %}">Partnership</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'campaign_list' %}">Campaigns</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'games_home' %}">Games</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'leaderboard' %}">Leaderboard</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'announcement_list' %}">Announcements</a>
+    <a class="lhx-mobile-menu-link" href="{% url 'prediction_plus' %}">Prediction+</a>
+    {% if request.session.wallet_address %}
+      <a class="lhx-mobile-menu-link" href="{% url 'profile' %}">Profile</a>
+      <a class="lhx-mobile-menu-link" href="{% url 'logout' %}">Logout</a>
+    {% else %}
+      <button class="lhx-btn mt-3" type="button" id="lhxConnectBtnMobile">Connect Wallet</button>
+    {% endif %}
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuBtn = document.getElementById('mobileMenuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+      const closeBtn = document.getElementById('mobileMenuClose');
+
+      if (menuBtn && mobileMenu && closeBtn) {
+        menuBtn.addEventListener('click', function() {
+          mobileMenu.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+
+        closeBtn.addEventListener('click', function() {
+          mobileMenu.classList.remove('active');
+          document.body.style.overflow = '';
+        });
+
+        // Close on link click
+        const links = mobileMenu.querySelectorAll('.lhx-mobile-menu-link');
+        links.forEach(link => {
+          link.addEventListener('click', function() {
+            mobileMenu.classList.remove('active');
+            document.body.style.overflow = '';
+          });
+        });
+      }
+    });
+  </script>
 
   {% if messages %}
     <div class="container mt-3">
