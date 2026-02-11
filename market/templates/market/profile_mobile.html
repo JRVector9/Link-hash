@@ -1,0 +1,432 @@
+{% extends "market/base_mobile.html" %}
+{% load static %}
+
+{% block content %}
+{% static 'market/icons/default_icon.png' as default_avatar %}
+
+<!-- Page header -->
+<section class="mb-3">
+  <div class="lhx-pill">Account</div>
+  <h1 class="lhx-h1 mt-2 mb-1">Profile</h1>
+  <p class="lhx-sub mb-0" style="font-size:13px;">Manage your profile and wallet.</p>
+</section>
+
+<!-- Main card -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+
+    <!-- Connected Wallet -->
+    <div class="lhx-muted small mb-2">Connected Wallet</div>
+    <div style="background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+      <div class="lhx-mono" style="word-break: break-all; font-size: 12px; margin-bottom: 8px;">
+        {{ wallet_address }}
+      </div>
+      <a class="lhx-btn-sm m-full-width" style="text-align:center; display:block;"
+         href="https://solscan.io/account/{{ wallet_address }}" target="_blank" rel="noopener">
+        Solscan ↗
+      </a>
+    </div>
+
+    <!-- Points + Subscription stat cards -->
+    <div class="m-stat-row mb-3">
+      <div class="m-stat-card">
+        <div class="m-stat-label">Points</div>
+        <div class="m-stat-value">{{ user_profile.points|default:"0" }}</div>
+      </div>
+      <div class="m-stat-card">
+        <div class="m-stat-label">Market Study</div>
+        <div class="m-stat-value" style="font-size:14px;">
+          {% if ms_subscription_active %}✅ Active{% else %}❌ None{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Points earning info (collapsible) -->
+    <details style="margin-bottom:16px;">
+      <summary class="lhx-muted small" style="cursor:pointer; opacity:.75;">How to earn points</summary>
+      <div class="lhx-muted small mt-2" style="opacity:.7; line-height:1.6;">
+        +25 pts — Create a campaign<br>
+        +15 pts — Basic advertisement<br>
+        +30 pts — Premium advertisement<br>
+        +1 pt — Daily check-in
+      </div>
+    </details>
+
+
+    {% if not is_edit %}
+      <!-- ===================== -->
+      <!-- VIEW MODE             -->
+      <!-- ===================== -->
+
+      <!-- Profile info -->
+      <div class="lhx-panel p-3 mb-3">
+        <div class="m-profile-header mb-3">
+          <div class="m-profile-avatar">
+            {% if user_profile.avatar %}
+              <img src="{{ user_profile.avatar.url }}?v={{ user_profile.created_at|date:'U' }}" alt="avatar">
+            {% else %}
+              <img src="{{ default_avatar }}" alt="default" style="opacity:.95;">
+            {% endif %}
+          </div>
+          <div>
+            <div class="m-profile-name">
+              {% if user_profile.display_name %}{{ user_profile.display_name }}{% else %}Unnamed{% endif %}
+            </div>
+            <div class="m-profile-wallet">
+              {{ wallet_address|slice:":4" }}...{{ wallet_address|slice:"-4:" }}
+            </div>
+          </div>
+        </div>
+
+        <a class="lhx-btn-outline m-full-width" style="text-align:center; display:block; margin-bottom:12px;"
+           href="{% url 'profile' %}?edit=1">
+          ✎ Edit Profile
+        </a>
+
+        <div class="lhx-muted small mb-1">Bio</div>
+        <div class="lhx-muted" style="white-space:pre-wrap; opacity:.9; font-size:14px;">
+          {% if user_profile.bio %}{{ user_profile.bio }}{% else %}<span style="opacity:.6;">No bio yet.</span>{% endif %}
+        </div>
+      </div>
+
+      <!-- Market Study Subscription -->
+      {% if ms_subscription_active %}
+      <div class="lhx-panel p-3 mb-3">
+        <div class="lhx-pill" style="margin-bottom:8px;">Market Study</div>
+        <div class="lhx-muted small" style="opacity:.85;">
+          ✅ Active — expires <span class="lhx-mono">{{ ms_expires_at|date:"Y-m-d H:i" }}</span>
+        </div>
+        <a class="lhx-btn-outline m-full-width mt-2" style="text-align:center; display:block;"
+           href="{% url 'prediction_plus' %}#market-study-section">
+          Go to Market Study
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- Attendance -->
+      <div class="lhx-panel p-3 mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div>
+            <div class="lhx-pill" style="margin-bottom:4px;">Attendance</div>
+            <div class="lhx-muted small" style="opacity:.75;">Resets at 00:00 UTC · +1 pt</div>
+          </div>
+        </div>
+
+        <!-- Check-in button (full width) -->
+        <form method="post" action="{% url 'profile' %}" class="mb-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="checkin">
+          {% if checked_in_today %}
+            <button type="button" class="lhx-btn-sm m-checkin-btn m-full-width"
+                    style="opacity:.55; pointer-events:none; text-align:center; display:block;">
+              ✅ Checked in today
+            </button>
+          {% else %}
+            <button type="submit" class="lhx-btn m-checkin-btn m-full-width"
+                    style="text-align:center; display:block;">
+              ✅ Check in today
+            </button>
+          {% endif %}
+        </form>
+
+        <!-- Calendar -->
+        <div class="lhx-muted small mb-2">
+          {{ attendance_year }}-{{ attendance_month|stringformat:"02d" }} (UTC)
+        </div>
+
+        <!-- Legend -->
+        <div class="d-flex align-items-center gap-3 flex-wrap lhx-muted small mb-2" style="opacity:.8;">
+          <span class="d-inline-flex align-items-center gap-1">
+            <span style="display:inline-flex; width:16px; height:16px; border-radius:5px; align-items:center; justify-content:center; background:rgba(10,122,85,.16); border:1px solid rgba(10,122,85,.25); font-size:10px;">✅</span>
+            Done
+          </span>
+          <span class="d-inline-flex align-items-center gap-1">
+            <span style="display:inline-flex; width:16px; height:16px; border-radius:5px; align-items:center; justify-content:center; background:rgba(255,60,60,.10); border:1px solid rgba(255,60,60,.25); font-size:10px;">❌</span>
+            Missed
+          </span>
+          <span class="d-inline-flex align-items-center gap-1">
+            <span style="display:inline-flex; width:16px; height:16px; border-radius:5px; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); font-size:10px;">•</span>
+            Future
+          </span>
+        </div>
+
+        <div class="m-calendar-wrap">
+          <table class="table-sm mb-0"
+                 style="width:100%;
+                        background:#ffffff;
+                        border-radius:10px;
+                        overflow:hidden;
+                        border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Mon</th>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Tue</th>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Wed</th>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Thu</th>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Fri</th>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Sat</th>
+                <th style="padding:8px 4px; color:#000 !important; text-align:center; font-size:12px;">Sun</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for week in attendance_weeks %}
+                <tr style="border-top:1px solid #e5e5e5;">
+                  {% for cell in week %}
+                    {% if cell.status == "empty" %}
+                      <td style="padding:6px 3px; height:38px; text-align:center; color:#000 !important; background:#fff;">&nbsp;</td>
+                    {% elif cell.status == "checked" %}
+                      <td style="padding:6px 3px; height:38px; text-align:center; color:#000 !important; background:rgba(10,122,85,.10);">
+                        <div style="font-weight:700; font-size:13px;">{{ cell.day }}</div>
+                        <div style="font-size:.85rem; line-height:1;">✅</div>
+                      </td>
+                    {% elif cell.status == "missed" %}
+                      <td style="padding:6px 3px; height:38px; text-align:center; color:#000 !important; background:rgba(255,60,60,.08);">
+                        <div style="font-weight:700; font-size:13px;">{{ cell.day }}</div>
+                        <div style="font-size:.85rem; line-height:1;">❌</div>
+                      </td>
+                    {% else %}
+                      <td style="padding:6px 3px; height:38px; text-align:center; color:#000 !important; background:rgba(0,0,0,.03);">
+                        <div style="font-weight:700; font-size:13px;">{{ cell.day }}</div>
+                        <div style="font-size:.85rem; line-height:1; opacity:.5;">•</div>
+                      </td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="lhx-muted small mt-2" style="opacity:.6; font-size:11px;">
+          Days up to today (UTC) without check-in are marked missed.
+        </div>
+      </div>
+
+    {% else %}
+      <!-- ===================== -->
+      <!-- EDIT MODE             -->
+      <!-- ===================== -->
+      <form method="post" enctype="multipart/form-data" id="profileForm">
+        {% csrf_token %}
+        <input type="hidden" name="clear_avatar" id="clearAvatarFlag" value="0">
+
+        <!-- Avatar -->
+        <div class="lhx-panel p-3 mb-3">
+          <div class="lhx-muted small mb-2">Avatar</div>
+
+          <div class="m-edit-avatar-section">
+            <div class="m-edit-avatar-preview">
+              {% if user_profile.avatar %}
+                <img id="avatarPreview"
+                     src="{{ user_profile.avatar.url }}?v={{ user_profile.created_at|date:'U' }}" alt="avatar">
+              {% else %}
+                <img id="avatarPreview"
+                     src="{{ default_avatar }}" alt="default" style="opacity:.95;">
+              {% endif %}
+            </div>
+
+            <div class="lhx-mono lhx-muted small" id="avatarMeta" style="text-align:center; opacity:.8;">
+              {% if user_profile.avatar %}{{ user_profile.avatar.name }}{% else %}No avatar{% endif %}
+            </div>
+
+            <div class="d-flex gap-2 justify-content-center">
+              <button type="button" class="lhx-btn-outline" id="removeAvatarBtn"
+                      {% if not user_profile.avatar %}disabled{% endif %}>
+                Remove
+              </button>
+              <a class="lhx-btn-outline" href="{% url 'profile' %}">Cancel</a>
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <label class="lhx-muted small mb-1 d-block">Change avatar</label>
+            <input type="file" name="avatar" id="id_avatar" accept="image/*" class="form-control">
+            {% if form.avatar.errors %}
+              <div class="text-danger small mt-1">{{ form.avatar.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div class="lhx-panel p-3 mb-3">
+          <div class="lhx-muted small mb-2">Username</div>
+          {{ form.display_name }}
+          {% if form.display_name.errors %}
+            <div class="text-danger small mt-1">{{ form.display_name.errors }}</div>
+          {% endif %}
+          <div class="lhx-muted small mt-1" style="opacity:.6; font-size:11px;">Shown publicly on LinkHash.</div>
+        </div>
+
+        <!-- Bio -->
+        <div class="lhx-panel p-3 mb-3">
+          <div class="lhx-muted small mb-2">Bio</div>
+          {{ form.bio }}
+          {% if form.bio.errors %}
+            <div class="text-danger small mt-1">{{ form.bio.errors }}</div>
+          {% endif %}
+          <div class="lhx-muted small mt-1" style="opacity:.6; font-size:11px;">Short intro (optional).</div>
+        </div>
+
+        <!-- Save -->
+        <button type="submit" class="lhx-btn m-full-width" style="text-align:center; display:block;">
+          Save Profile
+        </button>
+      </form>
+
+      <script>
+      (function(){
+        const defaultAvatar = "{{ default_avatar }}";
+        const hadAvatar = {% if user_profile.avatar %}true{% else %}false{% endif %};
+        const preview   = document.getElementById("avatarPreview");
+        const meta      = document.getElementById("avatarMeta");
+        const removeBtn = document.getElementById("removeAvatarBtn");
+        const clearFlg  = document.getElementById("clearAvatarFlag");
+        const fileInput = document.getElementById("id_avatar");
+
+        if (removeBtn) {
+          removeBtn.addEventListener("click", () => {
+            clearFlg.value = "1";
+            preview.src = defaultAvatar;
+            preview.style.opacity = ".95";
+            meta.textContent = "Will be removed on save";
+            removeBtn.disabled = true;
+            if (fileInput) fileInput.value = "";
+          });
+        }
+
+        if (fileInput) {
+          fileInput.addEventListener("change", () => {
+            const f = fileInput.files && fileInput.files[0];
+            if (!f) return;
+            clearFlg.value = "0";
+            meta.textContent = f.name;
+            if (removeBtn) removeBtn.disabled = false;
+            preview.src = URL.createObjectURL(f);
+            preview.style.opacity = "1";
+          });
+        }
+
+        if (!hadAvatar && removeBtn) removeBtn.disabled = true;
+      })();
+      </script>
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- CREATOR DASHBOARD -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+    <div id="myCampaignsBlock">
+      <div class="lhx-pill mb-2">Creator</div>
+      <h2 class="lhx-h2 mb-1">Campaign Dashboard</h2>
+      <div class="lhx-muted small mb-3" style="opacity:.8;">
+        Manage campaigns you created.
+      </div>
+
+      <a class="lhx-btn-outline m-full-width mb-3" style="text-align:center; display:block;"
+         href="{% url 'creator_campaign_list' %}">
+        Open Dashboard
+      </a>
+
+      {% if my_campaigns and my_campaigns.paginator.count > 0 %}
+        <div class="lhx-muted small mb-2">
+          {{ my_campaigns.paginator.count }} campaign{{ my_campaigns.paginator.count|pluralize }}
+        </div>
+
+        <!-- Mobile: card-style instead of table -->
+        {% for c in my_campaigns %}
+          <div class="m-campaign-card">
+            <div class="m-campaign-card-title">{{ c.title }}</div>
+            <div class="m-campaign-card-meta">
+              {{ c.get_campaign_type_display }} · {{ c.submission_fee_lhx }} LHX · {{ c.created_at|date:"Y-m-d" }}
+            </div>
+            <div class="m-campaign-card-actions">
+              <span class="lhx-badge" style="font-size:11px;">{{ c.get_status_display }}</span>
+              <a class="lhx-btn-sm" href="{% url 'creator_campaign_manage' c.id %}"
+                 style="font-size:12px;">
+                Manage
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+          <div class="lhx-muted small" style="font-size:11px;">
+            Page {{ my_campaigns.number }}/{{ my_campaigns.paginator.num_pages }}
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            {% if my_campaigns.has_previous %}
+              <a class="lhx-btn-sm" style="font-size:12px;"
+                 href="?mc={{ my_campaigns.previous_page_number }}{% if is_edit %}&edit=1{% endif %}#creator-campaigns">
+                ← Prev
+              </a>
+            {% endif %}
+            {% if my_campaigns.has_next %}
+              <a class="lhx-btn-sm" style="font-size:12px;"
+                 href="?mc={{ my_campaigns.next_page_number }}{% if is_edit %}&edit=1{% endif %}#creator-campaigns">
+                Next →
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+      {% else %}
+        <div class="lhx-muted small" style="opacity:.65;">
+          No campaigns yet.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<div id="creator-campaigns"></div>
+
+<!-- AJAX pagination (same logic, simplified) -->
+<script>
+(function(){
+  const blockId = "myCampaignsBlock";
+  let loading = false;
+
+  function stripHash(url){
+    try { const u = new URL(url, window.location.href); u.hash = ""; return u.toString(); }
+    catch(e){ return (url || "").split("#")[0]; }
+  }
+
+  async function swapMyCampaigns(url, push){
+    if (loading) return;
+    loading = true;
+    try {
+      const res = await fetch(stripHash(url), { method:"GET", credentials:"same-origin", headers:{"X-Requested-With":"XMLHttpRequest"} });
+      if (!res.ok){ window.location.href = url; return; }
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const newBlock = doc.getElementById(blockId);
+      const curBlock = document.getElementById(blockId);
+      if (!newBlock || !curBlock){ window.location.href = url; return; }
+      curBlock.replaceWith(newBlock);
+      if (push) history.pushState({ mc: true }, "", url);
+      const anchor = document.getElementById("creator-campaigns");
+      if (anchor) anchor.scrollIntoView({ block: "start" });
+    } catch(e){ window.location.href = url; }
+    finally { loading = false; }
+  }
+
+  document.addEventListener("click", function(e){
+    const a = e.target.closest("a");
+    if (!a) return;
+    const href = a.getAttribute("href") || "";
+    if (!href.includes("mc=")) return;
+    const curBlock = document.getElementById(blockId);
+    if (!curBlock || !curBlock.contains(a)) return;
+    e.preventDefault();
+    swapMyCampaigns(a.href, true);
+  });
+
+  window.addEventListener("popstate", function(){ swapMyCampaigns(window.location.href, false); });
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,548 @@
+{# templates/market/home.html #}
+{% extends "market/base.html" %}
+{% load humanize %}
+{% load static %}
+
+
+{% block content %}
+  <!-- HERO -->
+  <div class="mb-4">
+    <div class="lhx-pill">Web3 Market Signals</div>
+    <h1 class="lhx-h1 mt-3">
+      Discover tokens with <span class="lhx-accent">liquidity</span> and <span class="lhx-accent">traction</span>.
+    </h1>
+    <h1 class="lhx-h1 mt-3">
+      Advertise your <span class="lhx-accent">project</span> and build <span class="lhx-accent">momentum</span>.
+    </h1>
+    <p class="lhx-sub">Enjoy a more refined signal than other DEX aggregators and promote your own DEX projects</p>
+  </div>
+
+  <!-- SPONSORED -->
+  <section class="mb-5" id="sponsored-section">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <h2 class="lhx-h2 mb-0">Sponsored</h2>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- <div class="lhx-muted">Partnered projects</div> -->
+
+        <!-- ✅ New button (link target can be changed later) -->
+        <a href="{% url 'partnership' %}"
+           class="lhx-btn-sm lhx-btn-ghost">
+          Become our partner!
+        </a>
+      </div>
+    </div>
+
+
+    <div class="row g-3">
+      {% for s in sponsored_page %}
+        <div class="col-md-6">
+          <div class="lhx-card p-3 h-100 {% if s.tier == 'premium' %}lhx-card-premium{% endif %}">
+            <div class="d-flex gap-3 align-items-start">
+
+              <!-- Logo -->
+              <div class="lhx-logo">
+                {% if s.image and s.image.url %}
+                  <img src="{{ s.image.url }}" alt="{{ s.name }}">
+                {% else %}
+                  <div class="lhx-logo-fallback">LH</div>
+                {% endif %}
+              </div>
+
+              <div class="flex-grow-1">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div>
+                    <div class="lhx-title">{{ s.name }}</div>
+                    {% if s.symbol %}
+                      <div class="small lhx-muted">{{ s.symbol }}</div>
+                    {% endif %}
+                    {% if s.token_address %}
+                      <div class="lhx-mono small text-secondary">
+                        {{ s.token_address|slice:":6" }}...{{ s.token_address|slice:"-6:" }}
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <!-- Badges -->
+                  <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                    {% if s.tier == "premium" %}
+                      <span class="lhx-badge lhx-badge-premium lhx-premium-glow">
+                        <span style="
+                          background: linear-gradient(180deg, #fff2c2 0%, #ffd977 45%, #e6b85c 100%);
+                          -webkit-background-clip: text;
+                          background-clip: text;
+                          -webkit-text-fill-color: transparent;
+                          font-weight: 600;
+                          letter-spacing: .2px;
+                        ">
+                          Premium Partner
+                        </span>
+                      </span>
+                    {% else %}
+                      <span class="lhx-badge">Partner</span>
+                    {% endif %}
+
+                    <!-- <span class="lhx-badge">Partner</span> -->
+
+                    {% if s.linkhash_holdings_pct is not None %}
+                      <span class="lhx-badge">
+                        LinkHash owns {{ s.linkhash_holdings_pct|floatformat:2 }}%
+                      </span>
+                    {% endif %}
+
+                    {% if s.graduated %}
+                      <span class="lhx-badge lhx-badge-major">Graduated</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Description (full, no indent) -->
+                {% if s.description %}
+                  <p class="mt-2 lhx-muted small lhx-desc mb-0">{{ s.description }}</p>
+                {% endif %}
+
+                <!-- Metrics row -->
+                <div class="mt-3 d-flex flex-wrap gap-3 small">
+                  <div class="lhx-muted">
+                    <span class="lhx-mono text-secondary">MCAP:</span>
+                    {% if s.mcap_usd is not None %}
+                      <span class="lhx-mono">${{ s.mcap_usd|floatformat:0|intcomma }}</span>
+                    {% else %}
+                      <span class="lhx-mono">-</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="lhx-muted">
+                    <span class="lhx-mono text-secondary">Vol(24h):</span>
+                    {% if s.volume_24h_usd is not None %}
+                      <span class="lhx-mono">${{ s.volume_24h_usd|floatformat:0|intcomma }}</span>
+                    {% else %}
+                      <span class="lhx-mono">-</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="lhx-muted">
+                    <span class="lhx-mono text-secondary">Txns(24h):</span>
+                    {% if s.txns_24h is not None %}
+                      <span class="lhx-mono">{{ s.txns_24h|intcomma }}</span>
+                    {% else %}
+                      <span class="lhx-mono">-</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+
+                  {% if s.website %}
+                    <a class="lhx-btn-sm" href="{{ s.website }}" target="_blank" rel="noopener">Website</a>
+                  {% endif %}
+
+                  {% if s.x_url %}
+                    <a class="lhx-btn-sm" href="{{ s.x_url }}" target="_blank" rel="noopener">X</a>
+                  {% endif %}
+
+                  {% if s.tg_url %}
+                    <a class="lhx-btn-sm" href="{{ s.tg_url }}" target="_blank" rel="noopener">TG</a>
+                  {% endif %}
+
+                  <!-- CEX Section -->
+                  {% if s.cex_links %}
+                    <div class="w-100 mt-2"></div>
+                    <div class="small lhx-muted me-2" style="opacity:.7;">CEX Listings:</div>
+
+                    {% for link in s.cex_links %}
+                      {% if link %}
+                        <a class="lhx-btn-sm lhx-btn-ghost"
+                           href="{{ link }}"
+                           target="_blank"
+                           rel="noopener">
+                          CEX {{ forloop.counter }}
+                        </a>
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+
+                  <!-- DEX Section -->
+                  {% if s.dex_links or s.dex_url %}
+                    <div class="w-100 mt-2"></div>
+                    <div class="small lhx-muted me-2" style="opacity:.7;">DEX Listings:</div>
+
+                    {% if s.dex_links %}
+                      {% for link in s.dex_links %}
+                        {% if link %}
+                          <a class="lhx-btn-sm d-inline-flex align-items-center gap-2"
+                             href="{{ link }}"
+                             target="_blank"
+                             rel="noopener">
+                            DEX {{ forloop.counter }}
+                          </a>
+                        {% endif %}
+                      {% endfor %}
+                    {% elif s.dex_url %}
+                      <a class="lhx-btn-sm d-inline-flex align-items-center gap-2"
+                         href="{{ s.dex_url }}"
+                         target="_blank"
+                         rel="noopener">
+                        DEX
+                      </a>
+                    {% endif %}
+                  {% endif %}
+
+                  <!-- Explorer -->
+                  {% if s.token_address %}
+                    <div class="w-100 mt-2"></div>
+                    <div class="small lhx-muted me-2" style="opacity:.7;">Explorer:</div>
+                    {% if s.chain == "bnb" %}
+                      <a class="lhx-btn-sm d-inline-flex align-items-center gap-2"
+                         href="https://bscscan.com/token/{{ s.token_address }}"
+                         target="_blank"
+                         rel="noopener">
+                        <img src="{% static 'market/icons/bscscan.png' %}"
+                             alt="BscScan"
+                             style="width:16px;height:16px;object-fit:contain;">
+                        BscScan
+                      </a>
+                    {% elif s.chain == "sol" %}
+                      <a class="lhx-btn-sm d-inline-flex align-items-center gap-2"
+                         href="https://solscan.io/token/{{ s.token_address }}"
+                         target="_blank"
+                         rel="noopener">
+                        <img src="{% static 'market/icons/solscan.png' %}"
+                             alt="Solscan"
+                             style="width:16px;height:16px;object-fit:contain;">
+                        Solscan
+                      </a>
+                    {% else %}
+                      <span class="lhx-muted small">Explorer not supported</span>
+                    {% endif %}
+                  {% endif %}
+
+                </div>
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <div class="lhx-card p-4 text-secondary">No sponsored projects yet. Add them in Admin.</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-3">
+      {% include "market/partials/pagination.html" with page_obj=sponsored_page param="sp" section_id="sponsored-section" %}
+    </div>
+  </section>
+
+  <!-- MAJORS -->
+  <section class="mb-5" id="majors-section">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="lhx-h2">Trending Majors 🔥</h2>
+      <div class="lhx-muted">≥ $1M MCAP · strong liquidity & volume</div>
+    </div>
+
+    <div class="lhx-card p-0 overflow-hidden lhx-card-major">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>MCAP</th>
+              <th>Liquidity</th>
+              <th>Volume(24h)</th>
+              <th>Txns(24h)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in majors_page %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ t.base_symbol|default:"UNK" }}</div>
+                  {% if t.token_address %}
+                    <a class="lhx-mono small text-secondary lhx-ca-link"
+                       href="https://solscan.io/token/{{ t.token_address }}"
+                       target="_blank"
+                       rel="noopener">
+                      {{ t.token_address|slice:":6" }}...{{ t.token_address|slice:"-6:" }} ↗
+                    </a>
+                  {% endif %}
+                </td>
+                <td>${{ t.market_cap|floatformat:0|intcomma }}</td>
+                <td>${{ t.liquidity_usd|floatformat:0|intcomma }}</td>
+                <td>${{ t.volume_24h|floatformat:0|intcomma }}</td>
+                <td>{{ t.txns_24h|default:"-"|intcomma }}</td>
+                <td class="text-end">
+                  {% if t.url %}
+                    <a href="{{ t.url }}" target="_blank" rel="noopener" class="lhx-btn-sm">DEX</a>
+                  {% else %}
+                    <span class="text-secondary">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-secondary p-4">No majors yet. Run update_market_data.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      {% include "market/partials/pagination.html" with page_obj=majors_page param="m" section_id="majors-section" %}
+    </div>
+  </section>
+
+  <!-- POTENTIAL -->
+  <section class="mb-4" id="potential-section">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="lhx-h2">Potential Momentum 🚀</h2>
+      <div class="lhx-muted">Sub-$1M · but strong signals</div>
+    </div>
+
+    <div class="lhx-card p-0 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover m-0 align-middle">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>MCAP</th>
+              <th>Liquidity</th>
+              <th>Volume(24h)</th>
+              <th>Txns(24h)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in potential_page %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ t.base_symbol|default:"UNK" }}</div>
+                  {% if t.token_address %}
+                    <a class="lhx-mono small text-secondary lhx-ca-link"
+                       href="https://solscan.io/token/{{ t.token_address }}"
+                       target="_blank"
+                       rel="noopener">
+                      {{ t.token_address|slice:":6" }}...{{ t.token_address|slice:"-6:" }} ↗
+                    </a>
+                  {% endif %}
+                </td>
+                <td>${{ t.market_cap|floatformat:0|intcomma }}</td>
+                <td>${{ t.liquidity_usd|floatformat:0|intcomma }}</td>
+                <td>${{ t.volume_24h|floatformat:0|intcomma }}</td>
+                <td>{{ t.txns_24h|default:"-"|intcomma }}</td>
+                <td class="text-end">
+                  {% if t.url %}
+                    <a class="lhx-btn-sm" href="{{ t.url }}" target="_blank" rel="noopener">DEX</a>
+                  {% else %}
+                    <span class="text-secondary">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-secondary p-4">No potential tokens yet. Run update_market_data.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      {% include "market/partials/pagination.html" with page_obj=potential_page param="p" section_id="potential-section" %}
+    </div>
+  </section>
+
+  {% load static %}
+
+  <!-- DCENT WALLET AFFILIATE -->
+  <section class="mt-5 mb-3">
+    <div class="lhx-card p-4">
+
+      <div class="d-flex align-items-start justify-content-between gap-3 mb-3 flex-wrap">
+        <div>
+
+          <!-- AD badge -->
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="lhx-ad-badge">AD</span>
+            <span class="lhx-muted small">Partner Promotion</span>
+          </div>
+
+          <h2 class="lhx-h2 mb-1">Secure Your Assets with D’CENT Wallet</h2>
+
+          <div class="lhx-muted small">
+            <strong>LinkHash is an official partner of D'CENT Wallet.</strong>
+            Secure your assets with <strong>D'CENT</strong>, the world's first biometrically secured cryptocurrency wallet.
+          </div>
+
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <a href="https://www.dcentwallet.com/en"
+             target="_blank" rel="noopener"
+             class="lhx-btn-sm lhx-btn-ghost">
+            Official Website
+          </a>
+        </div>
+      </div>
+
+      <!-- Product Cards -->
+      <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+          <a class="lhx-ad-card"
+             href="https://store.dcentwallet.com/products/biometric-wallet-affiliates?bg_ref=mFDrbt0mG4"
+             target="_blank" rel="noopener">
+            <div class="lhx-ad-imgbox">
+              <img src="{% static 'market/ads/dcent-biometric-1.png' %}" alt="D'CENT Biometric Wallet">
+            </div>
+            <div class="lhx-ad-title">Biometric Wallet</div>
+            <div class="lhx-ad-sub">Global store · Affiliates</div>
+          </a>
+        </div>
+
+        <div class="col-md-4">
+          <a class="lhx-ad-card"
+             href="https://store.dcentwallet.com/products/biometric-wallet-2x-package-affiliates?bg_ref=mFDrbt0mG4"
+             target="_blank" rel="noopener">
+            <div class="lhx-ad-imgbox">
+              <img src="{% static 'market/ads/dcent-biometric-2x.png' %}" alt="D'CENT Biometric Wallet 2X">
+            </div>
+            <div class="lhx-ad-title">Biometric Wallet 2X</div>
+            <div class="lhx-ad-sub">Global store · Best value</div>
+          </a>
+        </div>
+
+        <div class="col-md-4">
+          <a class="lhx-ad-card"
+             href="https://store.dcentwallet.com/products/all-in-one-card-wallet-backup-card-package-affiliates?bg_ref=mFDrbt0mG4"
+             target="_blank" rel="noopener">
+            <div class="lhx-ad-imgbox">
+              <img src="{% static 'market/ads/dcent-card-wallet.png' %}" alt="D'CENT Card Wallet">
+            </div>
+            <div class="lhx-ad-title">Card Wallet + Backup</div>
+            <div class="lhx-ad-sub">All-in-one package</div>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Affiliate Links -->
+      <div class="row g-4">
+
+        <div class="col-md-6">
+          <div class="lhx-ad-links">
+            <div class="lhx-ad-links-title">🇰🇷 For Korean Customers</div>
+
+            <div class="lhx-ad-linkitem">
+              <div class="lhx-ad-linkname">디센트 지문인증형 지갑 (1개) — ₩149,000</div>
+              <a class="lhx-ad-link"
+                 href="https://store-kr.dcentwallet.com/products/biometric-wallet-linkhash?utm_source=yt_linkhash&utm_medium=affiliate&utm_campaign=linkhash"
+                 target="_blank" rel="noopener">
+                👉 Buy with ₩30,000 discount
+              </a>
+            </div>
+
+            <div class="lhx-ad-linkitem">
+              <div class="lhx-ad-linkname">디센트 지문인증형 지갑 (2개 세트) — ₩250,000</div>
+              <a class="lhx-ad-link"
+                 href="https://store-kr.dcentwallet.com/products/biometric-wallet-2x-package-linkhash?utm_source=yt_linkhash&utm_medium=affiliate&utm_campaign=linkhash"
+                 target="_blank" rel="noopener">
+                👉 Buy with ₩100,000 discount
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="lhx-ad-links">
+            <div class="lhx-ad-links-title">🌍 For Overseas Customers</div>
+
+            <div class="lhx-ad-linkitem">
+              <a class="lhx-ad-link"
+                 href="https://store.dcentwallet.com/products/biometric-wallet-affiliates?bg_ref=mFDrbt0mG4"
+                 target="_blank" rel="noopener">👉 Biometric Wallet</a>
+            </div>
+
+            <div class="lhx-ad-linkitem">
+              <a class="lhx-ad-link"
+                 href="https://store.dcentwallet.com/products/biometric-wallet-2x-package-affiliates?bg_ref=mFDrbt0mG4"
+                 target="_blank" rel="noopener">👉 Biometric Wallet 2X Package</a>
+            </div>
+
+            <div class="lhx-ad-linkitem">
+              <a class="lhx-ad-link"
+                 href="https://store.dcentwallet.com/products/all-in-one-card-wallet-backup-card-package-affiliates?bg_ref=mFDrbt0mG4"
+                 target="_blank" rel="noopener">👉 All-in-One Card Wallet + Backup Card Package</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BITGET AFFILIATE -->
+  <section class="mt-5 mb-3">
+    <div class="lhx-card p-4">
+
+      <!-- Header -->
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+          <!-- Ad badge -->
+          <span class="lhx-badge lhx-badge-ad">Ad</span>
+
+          <!-- Title + Logo -->
+          <div class="d-flex align-items-center gap-2">
+            <h2 class="lhx-h2 mb-0">Trade crypto on Bitget with LinkHash</h2>
+
+            <!-- Bitget logo -->
+            <a href="https://partner.bitget.com/bg/LinkHash"
+               target="_blank" rel="noopener"
+               class="d-inline-flex align-items-center">
+              <img
+                src="{% static 'market/ads/bitget_logo_v3.png' %}"
+                alt="Bitget"
+                style="
+                  height:22px;
+                  width:auto;
+                  opacity:.9;
+                  margin-top:2px;
+                "
+              >
+            </a>
+          </div>
+
+        </div>
+
+
+      </div>
+
+      <!-- Description -->
+      <p class="lhx-muted mb-3">
+        <strong>LinkHash is an official partner of Bitget.</strong>
+        Sign up using our referral code <strong>“LinkHash”</strong> or the link below
+        to receive 20% trading fee discounts.
+      </p>
+
+      <!-- Link -->
+      <div class="lhx-muted small">
+        Use code <strong>LinkHash</strong> or sign up via
+        <a href="https://partner.bitget.com/bg/LinkHash"
+           target="_blank" rel="noopener"
+           class="lhx-link-muted ms-1">
+          partner.bitget.com/bg/LinkHash
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+
+{% endblock %}

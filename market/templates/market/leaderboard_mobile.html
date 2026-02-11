@@ -1,0 +1,124 @@
+{% extends "market/base_mobile.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="mb-3">
+  <div class="lhx-pill">Community</div>
+  <h1 class="lhx-h1 mt-2 mb-1">Leaderboard</h1>
+  <p class="lhx-sub mb-0" style="font-size:13px;">Ranked by points.</p>
+</section>
+
+<section class="mb-3">
+  <div class="lhx-card p-3">
+
+    <!-- My rank card -->
+    <div class="lhx-panel p-3 mb-3" style="border-color:rgba(51,240,163,0.15);">
+      <div class="lhx-muted small mb-1" style="font-size:11px; text-transform:uppercase; letter-spacing:.04em;">You</div>
+
+      {% if wallet_address %}
+        <div class="lhx-mono" style="word-break:break-all; font-size:12px; color:rgba(255,255,255,.88);">
+          {{ wallet_address|slice:":6" }}...{{ wallet_address|slice:"-6:" }}
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <div class="lhx-muted small" style="opacity:.82;">
+            {% if my_rank %}Rank <b style="color:var(--lhx-accent);">#{{ my_rank }}</b> ·{% endif %}
+            <b style="color:rgba(120,255,205,.95);">{{ me.points|default:"0" }}</b> pts
+          </div>
+          <a class="lhx-btn-sm" style="font-size:12px; padding:8px 12px;"
+             href="{% url 'public_profile' wallet_address %}">
+            View
+          </a>
+        </div>
+      {% else %}
+        <div class="lhx-muted small" style="opacity:.7;">Connect wallet to see your rank.</div>
+      {% endif %}
+    </div>
+
+    <!-- Top users label + page info -->
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <div class="lhx-muted small">Top users</div>
+      <div class="lhx-muted small" style="opacity:.65; font-size:11px;">
+        {{ rows.number }}/{{ rows.paginator.num_pages }}
+      </div>
+    </div>
+
+    <!-- Leaderboard rows (card-style) -->
+    <div class="d-flex flex-column gap-2">
+      {% for u in rows %}
+        {% with rank=rows.start_index|add:forloop.counter0 %}
+          <div class="lhx-panel p-3"
+               style="{% if u.wallet_address == wallet_address %}border-color:rgba(51,240,163,0.22); background:rgba(51,240,163,0.04);{% endif %}">
+
+            <div class="d-flex align-items-center gap-3">
+
+              <!-- Rank number -->
+              <div style="min-width:32px; text-align:center;">
+                {% if rank == 1 %}
+                  <span style="font-size:20px;">🥇</span>
+                {% elif rank == 2 %}
+                  <span style="font-size:20px;">🥈</span>
+                {% elif rank == 3 %}
+                  <span style="font-size:20px;">🥉</span>
+                {% else %}
+                  <span style="font-weight:800; color:rgba(255,255,255,.7); font-size:15px;">#{{ rank }}</span>
+                {% endif %}
+              </div>
+
+              <!-- User info -->
+              <div style="flex:1; min-width:0;">
+                <div class="d-flex align-items-center gap-2">
+                  <a href="{% url 'public_profile' u.wallet_address %}"
+                     class="lhx-mono"
+                     style="color:rgba(220,255,245,.92); text-decoration:none; font-weight:700; font-size:13px;">
+                    {{ u.wallet_address|slice:":4" }}...{{ u.wallet_address|slice:"-4:" }}
+                  </a>
+                  {% if u.wallet_address == wallet_address %}
+                    <span class="lhx-badge" style="font-size:10px; padding:2px 6px; border-color:rgba(35,255,170,.30); background:rgba(35,255,170,.10); color:rgba(220,255,245,.92);">
+                      YOU
+                    </span>
+                  {% endif %}
+                </div>
+                <div class="lhx-muted small" style="opacity:.65; font-size:12px; margin-top:2px;">
+                  {% if u.display_name %}{{ u.display_name }}{% else %}Contributor{% endif %}
+                </div>
+              </div>
+
+              <!-- Points -->
+              <div style="text-align:right; flex-shrink:0;">
+                <div class="lhx-mono" style="font-weight:800; color:rgba(120,255,205,.95); font-size:16px;">
+                  {{ u.points|default:"0" }}
+                </div>
+                <div class="lhx-muted" style="font-size:10px; opacity:.55;">pts</div>
+              </div>
+
+            </div>
+          </div>
+        {% endwith %}
+      {% empty %}
+        <div class="lhx-panel p-3 text-center">
+          <div class="lhx-muted small" style="opacity:.7;">No users yet.</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex align-items-center justify-content-between mt-3">
+      <div class="lhx-muted small" style="font-size:11px; opacity:.7;">
+        Page {{ rows.number }}/{{ rows.paginator.num_pages }}
+      </div>
+      <div class="d-flex gap-2">
+        {% if rows.has_previous %}
+          <a class="lhx-btn-sm" style="font-size:12px;" href="?page={{ rows.previous_page_number }}">← Prev</a>
+        {% endif %}
+        {% if rows.has_next %}
+          <a class="lhx-btn-sm" style="font-size:12px;" href="?page={{ rows.next_page_number }}">Next →</a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

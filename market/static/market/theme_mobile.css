@@ -1,0 +1,556 @@
+/* ==========================================================
+   theme_mobile.css — LinkHash Mobile Overrides
+   Loaded AFTER theme.css, only on mobile templates.
+   ========================================================== */
+
+/* ---------- Global mobile resets ---------- */
+body.lhx-bg {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+.container {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+main.container {
+  padding-top: 24px !important;
+  padding-bottom: 32px !important;
+}
+
+/* ---------- Mobile Nav (top bar) ---------- */
+.lhx-mnav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 15, 14, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 0;
+}
+
+.lhx-mnav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lhx-mnav-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lhx-mnav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Hamburger button */
+.lhx-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.lhx-hamburger:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.lhx-hamburger-line {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.lhx-hamburger-line + .lhx-hamburger-line {
+  margin-top: 5px;
+}
+
+/* Hamburger → X animation when open */
+.lhx-hamburger.open .lhx-hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.lhx-hamburger.open .lhx-hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.lhx-hamburger.open .lhx-hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+
+/* ---------- Slide-down Menu ---------- */
+.lhx-mmenu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.lhx-mmenu.open {
+  pointer-events: all;
+  visibility: visible;
+}
+
+/* Backdrop */
+.lhx-mmenu-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.lhx-mmenu.open .lhx-mmenu-backdrop {
+  opacity: 1;
+}
+
+/* Menu panel */
+.lhx-mmenu-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: rgba(10, 14, 12, 0.97);
+  border-bottom: 1px solid rgba(80,255,180,0.12);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  padding: 60px 20px 28px;
+  transform: translateY(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lhx-mmenu.open .lhx-mmenu-panel {
+  transform: translateY(0);
+}
+
+/* Menu wallet chip (inside menu) */
+.lhx-mmenu-wallet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: rgba(51,240,163,0.06);
+  border: 1px solid rgba(51,240,163,0.15);
+}
+
+.lhx-mmenu-wallet-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.lhx-mmenu-wallet-addr {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: rgba(240,255,250,0.9);
+  font-size: 14px;
+}
+
+/* Menu links */
+.lhx-mmenu-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lhx-mmenu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: rgba(240,255,250,0.88);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.lhx-mmenu-link:hover,
+.lhx-mmenu-link:active {
+  background: rgba(51,240,163,0.08);
+  color: rgba(240,255,250,0.95);
+}
+
+.lhx-mmenu-link-icon {
+  width: 20px;
+  text-align: center;
+  opacity: 0.7;
+  font-size: 16px;
+}
+
+.lhx-mmenu-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 8px 0;
+}
+
+.lhx-mmenu-link.danger {
+  color: rgba(255,120,120,0.9);
+}
+
+.lhx-mmenu-link.danger:hover,
+.lhx-mmenu-link.danger:active {
+  background: rgba(255,120,120,0.08);
+}
+
+/* Connect wallet inside menu */
+.lhx-mmenu-connect {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--lhx-accent2), var(--lhx-accent));
+  color: #062015;
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+
+/* ---------- Typography mobile ---------- */
+.lhx-h1 {
+  font-size: 28px !important;
+  line-height: 1.15 !important;
+}
+
+.lhx-h2 {
+  font-size: 18px !important;
+}
+
+.lhx-sub {
+  font-size: 14px !important;
+}
+
+.lhx-pill {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+
+/* ---------- Cards ---------- */
+.lhx-card {
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.lhx-card > .p-4 {
+  padding: 16px !important;
+}
+
+
+/* ---------- Panels ---------- */
+.lhx-panel {
+  border-radius: 14px !important;
+  padding: 14px !important;
+}
+
+
+/* ---------- Buttons: larger touch targets ---------- */
+.lhx-btn {
+  padding: 12px 18px;
+  font-size: 15px;
+  border-radius: 14px;
+  min-height: 44px;
+}
+
+.lhx-btn-outline {
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 12px;
+  min-height: 44px;
+}
+
+.lhx-btn-sm {
+  padding: 10px 14px;
+  font-size: 13px;
+  min-height: 40px;
+}
+
+
+/* ---------- Profile: avatar + info stacked ---------- */
+.m-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.m-profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(51,240,163,0.20);
+  flex-shrink: 0;
+}
+
+.m-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.m-profile-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+}
+
+.m-profile-wallet {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: var(--lhx-muted);
+  word-break: break-all;
+}
+
+
+/* ---------- Stat cards (points, subscription) ---------- */
+.m-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.m-stat-card {
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.m-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 4px;
+}
+
+.m-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(210,255,240,0.95);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+
+/* ---------- Calendar mobile ---------- */
+.m-calendar-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.m-calendar-wrap table {
+  min-width: 320px;
+}
+
+.m-calendar-wrap th,
+.m-calendar-wrap td {
+  padding: 8px 4px !important;
+  font-size: 13px !important;
+}
+
+
+/* ---------- Tables mobile ---------- */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* ---------- Form inputs ---------- */
+.form-control {
+  min-height: 44px;
+  font-size: 16px !important; /* prevents iOS zoom */
+  border-radius: 12px;
+}
+
+textarea.form-control {
+  min-height: 100px;
+}
+
+
+/* ---------- Footer mobile ---------- */
+.lhx-footer {
+  padding: 16px 0;
+}
+
+.lhx-footer-inner {
+  grid-template-columns: 1fr !important;
+  text-align: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+}
+
+.lhx-footer-left,
+.lhx-footer-center,
+.lhx-footer-right {
+  text-align: center !important;
+}
+
+
+/* ---------- Account chip (compact for nav) ---------- */
+.lhx-mnav .lhx-account-chip {
+  padding: 8px 10px;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.lhx-mnav .lhx-account-icon {
+  width: 18px;
+  height: 18px;
+}
+
+
+/* ---------- Edit mode: stacked columns ---------- */
+.m-edit-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.m-edit-avatar-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.10);
+}
+
+.m-edit-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* ---------- Sections spacing ---------- */
+section.mb-4 {
+  margin-bottom: 20px !important;
+}
+
+
+/* ---------- Flex helpers ---------- */
+.m-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-gap-sm { gap: 8px; }
+.m-gap-md { gap: 12px; }
+.m-gap-lg { gap: 16px; }
+
+.m-full-width {
+  width: 100%;
+}
+
+
+/* ---------- Checkin button ---------- */
+.m-checkin-btn {
+  width: 100%;
+  padding: 14px;
+  text-align: center;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  min-height: 48px;
+}
+
+
+/* ---------- Campaign table cards (stacked on mobile) ---------- */
+.m-campaign-card {
+  background: rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.m-campaign-card-title {
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.m-campaign-card-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+}
+
+.m-campaign-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+
+/* ---------- Scroll snap (horizontal carousels) ---------- */
+.lhx-drag-item {
+  flex: 0 0 88% !important;
+}
+
+
+/* ---------- Games overrides ---------- */
+.lhx-game-card {
+  border-radius: 16px;
+}
+
+.lhx-pot-display {
+  font-size: 28px !important;
+}
+
+.lhx-hud-panel {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  border-radius: 20px 20px 0 0 !important;
+  height: 75vh !important;
+}
+
+.lhx-hud-trigger {
+  bottom: 20px !important;
+  right: 16px !important;
+  width: 52px !important;
+  height: 52px !important;
+}
+
+
+/* ---------- Hide desktop-only, show mobile-only ---------- */
+.m-hide { display: none !important; }
+.m-show { display: block !important; }
+.m-show-flex { display: flex !important; }

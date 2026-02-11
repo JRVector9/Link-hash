@@ -1,0 +1,258 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<section class="mb-4">
+  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+      <div class="lhx-pill">Creator</div>
+      <h1 class="lhx-h1 mt-3 mb-2">My Campaigns</h1>
+      <p class="lhx-sub mb-0">Campaigns you created and their recent activity.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="lhx-btn-outline" href="{% url 'profile' %}">Back to Profile</a>
+      <a class="lhx-btn" href="{% url 'campaign_create' %}">+ Create Campaign</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="lhx-card p-4" id="myCampaignsBlock">
+
+    <style>
+      /* ===============================
+         My Campaigns — Dashboard-like pagination + table readability
+         Scope: only inside #myCampaignsBlock
+         =============================== */
+
+      /* Table readability on white table */
+      #myCampaignsBlock .lhx-creator-table { color:#111 !important; }
+      #myCampaignsBlock .lhx-creator-table thead th { color:#000 !important; font-weight:700; }
+      #myCampaignsBlock .lhx-creator-table tbody td { color:#111 !important; vertical-align:middle; }
+      #myCampaignsBlock .lhx-creator-table .lhx-muted,
+      #myCampaignsBlock .lhx-creator-table .small { color:#444 !important; }
+      #myCampaignsBlock .lhx-creator-table .lhx-mono { color:#111 !important; }
+      #myCampaignsBlock .lhx-creator-table .lhx-badge { color:#111 !important; }
+
+      /* Action buttons inside table should be readable on white */
+      #myCampaignsBlock .lhx-creator-table td a.lhx-btn-sm,
+      #myCampaignsBlock .lhx-creator-table td a.lhx-btn-outline {
+        color:#111 !important;
+        border-color: rgba(0,0,0,.25) !important;
+      }
+      #myCampaignsBlock .lhx-creator-table td a.lhx-btn-sm:hover,
+      #myCampaignsBlock .lhx-creator-table td a.lhx-btn-outline:hover {
+        color:#000 !important;
+        border-color: rgba(0,0,0,.45) !important;
+      }
+
+      /* Divider */
+      #myCampaignsBlock .lhx-creator-table.table > :not(caption) > * > * {
+        border-color: rgba(0,0,0,.08) !important;
+      }
+
+      /* Pagination (dashboard-like) */
+      #myCampaignsBlock .lhx-pg-wrap { margin-top: 14px; }
+      #myCampaignsBlock .lhx-pg-label { color: rgba(255,255,255,.60); }
+
+      #myCampaignsBlock .lhx-pg {
+        display:inline-flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      }
+
+      #myCampaignsBlock .lhx-pg-btn {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 12px;
+
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(0,0,0,0.28);
+        color: rgba(255,255,255,0.88);
+        text-decoration: none;
+
+        transition: transform .08s ease, background .12s ease, border-color .12s ease;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #myCampaignsBlock .lhx-pg-btn:hover {
+        background: rgba(0,0,0,0.40);
+        border-color: rgba(255,255,255,0.18);
+        transform: translateY(-1px);
+        color: rgba(255,255,255,0.95);
+      }
+
+      /* Active page */
+      #myCampaignsBlock .lhx-pg-btn.is-active {
+        background: rgba(34,197,94,0.18);          /* green-ish */
+        border-color: rgba(34,197,94,0.35);
+        color: rgba(210,255,240,.95);
+        font-weight: 700;
+        pointer-events: none;
+        transform: none;
+      }
+
+      /* Disabled */
+      #myCampaignsBlock .lhx-pg-btn.is-disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        pointer-events: none;
+        transform: none;
+      }
+    </style>
+
+    {% if campaigns and campaigns.paginator.count > 0 %}
+
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 lhx-creator-table" style="background:#fff; border-radius:12px; overflow:hidden;">
+          <thead>
+            <tr>
+              <th>Campaign</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Fee</th>
+              <th>Pool</th>
+              <th style="text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in campaigns %}
+              <tr>
+                <td style="max-width:520px;">
+                  <div class="fw-semibold">{{ c.title }}</div>
+                  <div class="lhx-muted small">
+                    Created: {{ c.created_at|date:"Y-m-d H:i" }}
+                    {% if c.starts_at %} · Starts: {{ c.starts_at|date:"Y-m-d H:i" }}{% endif %}
+                    {% if c.ends_at %} · Ends: {{ c.ends_at|date:"Y-m-d H:i" }}{% endif %}
+                  </div>
+                </td>
+
+                <td class="lhx-muted small">{{ c.get_campaign_type_display }}</td>
+
+                <td>
+                  <span class="lhx-badge">{{ c.get_status_display }}</span>
+                </td>
+
+                <td class="lhx-mono">{{ c.submission_fee_lhx|intcomma }} LHX</td>
+
+                <td class="lhx-mono">
+                  {% if c.pool_total_sol %}{{ c.pool_total_sol }} SOL{% else %}-{% endif %}
+                </td>
+
+                <td style="text-align:right;">
+                  <a class="lhx-btn-sm" href="{% url 'creator_campaign_manage' c.id %}">Manage</a>
+                  <a class="lhx-btn-outline" href="{% url 'campaign_detail' c.id %}">Public</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ✅ Pagination (Dashboard style) -->
+      <div class="lhx-pg-wrap d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="lhx-pg-label">
+          Page <b style="color:rgba(255,255,255,.85);">{{ campaigns.number }}</b>
+          of <b style="color:rgba(255,255,255,.85);">{{ campaigns.paginator.num_pages }}</b>
+        </div>
+
+        <div class="lhx-pg">
+          {% if campaigns.has_previous %}
+            <a class="lhx-pg-btn" href="?mc={{ campaigns.previous_page_number }}">← Prev</a>
+          {% else %}
+            <span class="lhx-pg-btn is-disabled">← Prev</span>
+          {% endif %}
+
+          {% for n in campaigns.paginator.page_range %}
+            {% if n == campaigns.number %}
+              <span class="lhx-pg-btn is-active">{{ n }}</span>
+            {% else %}
+              <a class="lhx-pg-btn" href="?mc={{ n }}">{{ n }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if campaigns.has_next %}
+            <a class="lhx-pg-btn" href="?mc={{ campaigns.next_page_number }}">Next →</a>
+          {% else %}
+            <span class="lhx-pg-btn is-disabled">Next →</span>
+          {% endif %}
+        </div>
+      </div>
+
+    {% else %}
+      <div class="lhx-muted">No campaigns yet.</div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(function(){
+  const blockId = "myCampaignsBlock";
+  let loading = false;
+
+  async function swap(url, push=true){
+    if (loading) return;
+    loading = true;
+
+    try{
+      const res = await fetch(url, {
+        credentials: "same-origin",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+
+      if (!res.ok) {
+        window.location.href = url;
+        return;
+      }
+
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const newBlock = doc.getElementById(blockId);
+      const curBlock = document.getElementById(blockId);
+
+      if (!newBlock || !curBlock) {
+        window.location.href = url;
+        return;
+      }
+
+      curBlock.replaceWith(newBlock);
+
+      if (push) history.pushState({ mc:true }, "", url);
+
+    } catch(e){
+      window.location.href = url;
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Intercept only pagination links inside the block (mc=)
+  document.addEventListener("click", function(e){
+    const a = e.target.closest("a");
+    if (!a) return;
+
+    const href = a.getAttribute("href") || "";
+    if (!href.includes("mc=")) return;
+
+    const block = document.getElementById(blockId);
+    if (!block || !block.contains(a)) return;
+
+    e.preventDefault();
+    swap(a.href, true);
+  });
+
+  window.addEventListener("popstate", function(){
+    swap(window.location.href, false);
+  });
+})();
+</script>
+
+{% endblock %}

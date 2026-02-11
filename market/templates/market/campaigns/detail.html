@@ -1,0 +1,188 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<!-- HEADER -->
+<section class="mb-4">
+  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+      <div class="lhx-pill">Campaign</div>
+      <h1 class="lhx-h1 mt-3 mb-2">{{ campaign.title }}</h1>
+      {% if campaign.description %}
+        <p class="lhx-sub mb-0">{{ campaign.description }}</p>
+      {% else %}
+        <p class="lhx-sub mb-0">No description.</p>
+      {% endif %}
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="lhx-btn-outline" href="{% url 'campaign_list' %}">Back to list</a>
+    </div>
+  </div>
+</section>
+
+<!-- META -->
+<section class="mb-4">
+  <div class="lhx-card p-4">
+    <div class="d-flex flex-wrap gap-2 justify-content-between">
+      <div class="lhx-muted small">
+        Type:
+        {% if campaign.campaign_type == "dex_promo" %}
+          <span class="lhx-badge lhx-badge-major ms-2">DEX</span>
+        {% else %}
+          <span class="lhx-badge ms-2">General</span>
+        {% endif %}
+      </div>
+      <div class="lhx-muted small">
+        Submission Fee: <span class="lhx-mono">{{ fee_lhx|intcomma }} LHX</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUBMIT -->
+<section>
+  <div class="lhx-card p-4">
+    <h2 class="lhx-h2 mb-2">Submit</h2>
+    <div class="lhx-muted small mb-3">
+      To prevent spam submissions, you must pay <b>{{ fee_lhx|intcomma }} LHX</b> as a submission fee.
+    </div>
+
+    {% if not request.session.wallet_address %}
+      <div class="alert alert-warning mb-0">
+        Connect your wallet to submit.
+      </div>
+    {% else %}
+
+      {% if is_past %}
+        <div class="alert alert-secondary mb-0">
+          This campaign has ended. Submissions are closed.
+        </div>
+      {% else %}
+
+        <!-- ✅ 제출 성공/실패 메시지가 뜨는 영역 -->
+        <div id="submitFeedback" class="mb-3"></div>
+
+        <form id="campaignSubmitForm"
+              method="post"
+              action="{% url 'campaign_submit' campaign.id %}"
+              enctype="multipart/form-data"
+
+              hx-post="{% url 'campaign_submit' campaign.id %}"
+              hx-target="#submitFeedback"
+              hx-swap="innerHTML">
+          {% csrf_token %}
+
+          <div class="lhx-card p-3 mb-3" style="background: rgba(10,14,13,.55); border: 1px solid rgba(255,255,255,.06);">
+            <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+              <div>
+                <div class="lhx-title" style="margin:0;">Where to send LHX (Submission Fee Wallet)</div>
+                <div class="lhx-muted small mt-1">
+                  Send <b>{{ fee_lhx|intcomma }} LHX</b> to this wallet, then paste the transaction signature below.
+                </div>
+              </div>
+              <button class="lhx-btn-outline" type="button" id="copyFeeWalletBtn">Copy</button>
+            </div>
+
+            <div class="mt-3">
+              <div class="lhx-muted small mb-1">Recipient (LinkHash Fee Wallet)</div>
+              <code class="lhx-mono" id="feeWalletText" style="
+                display:inline-block;
+                padding:10px 12px;
+                border-radius:12px;
+                background: rgba(0,0,0,.35);
+                border: 1px solid rgba(80,255,180,0.16);
+                color: rgba(210,255,240,.95);
+              ">{{ fee_wallet }}</code>
+
+              <div class="lhx-muted small mt-2">
+                Tip: Transfer <b>exactly</b> {{ fee_lhx|intcomma }} LHX in a single transaction.
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Fee Tx Signature (LHX transfer)</label>
+            <input class="form-control lhx-mono" name="fee_tx_signature" placeholder="Paste Solana tx signature" required>
+            <div class="lhx-muted small mt-1">
+              This tx must be an on-chain LHX transfer matching the required fee.
+            </div>
+          </div>
+
+          {% for f in fields %}
+            <div class="mb-3">
+              <label class="form-label">
+                {{ f.label }}
+                {% if f.required %}<span class="text-danger">*</span>{% endif %}
+              </label>
+
+              {% if f.field_type == "text" %}
+                <input class="form-control" name="field__{{ f.key }}" {% if f.required %}required{% endif %}>
+              {% elif f.field_type == "textarea" %}
+                <textarea class="form-control" rows="3" name="field__{{ f.key }}" {% if f.required %}required{% endif %}></textarea>
+              {% else %}
+                <input class="form-control" name="field__{{ f.key }}" {% if f.required %}required{% endif %}>
+              {% endif %}
+
+              {% if f.help_text %}
+                <div class="lhx-muted small mt-1">{{ f.help_text }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <div class="mb-3">
+            <label class="form-label">Images (optional)</label>
+            <input class="form-control" type="file" name="images" multiple accept="image/*">
+            <div class="lhx-muted small mt-1">You can only upload a single image for now!</div>
+          </div>
+
+          <button class="lhx-btn" type="submit">Submit</button>
+        </form>
+
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+
+<!-- ✅ SUBMISSIONS LIST -->
+<section class="mt-4">
+  <div class="lhx-card p-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <h2 class="lhx-h2 mb-0">Recent Submissions</h2>
+      <button class="lhx-btn-outline"
+              type="button"
+              hx-get="{% url 'campaign_submissions_partial' campaign.id %}"
+              hx-target="#submissionsWrap"
+              hx-swap="innerHTML">
+        Refresh
+      </button>
+    </div>
+
+    <div id="submissionsWrap" class="mt-3">
+      {% include "market/campaigns/_submissions_list.html" %}
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const copyBtn = document.getElementById("copyFeeWalletBtn");
+  const feeWalletText = document.getElementById("feeWalletText");
+
+  if (copyBtn && feeWalletText){
+    copyBtn.addEventListener("click", async () => {
+      try{
+        const text = feeWalletText.textContent.trim();
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = "Copied";
+        setTimeout(()=> copyBtn.textContent = "Copy", 1200);
+      }catch(e){
+        alert("Copy failed. Please copy manually.");
+      }
+    });
+  }
+})();
+</script>
+
+{% endblock %}

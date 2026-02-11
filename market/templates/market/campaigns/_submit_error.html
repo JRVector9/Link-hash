@@ -1,0 +1,30 @@
+{# templates/market/campaigns/_submit_error.html #}
+
+<div
+  class="lhx-card p-3 mt-3"
+  style="
+    background: rgba(255, 60, 90, 0.08);
+    border: 1px solid rgba(255, 60, 90, 0.28);
+    border-radius: 14px;
+  "
+>
+  <div style="display:flex; align-items:flex-start; gap:10px;">
+    <div style="font-size:1.1rem; line-height:1;">⚠️</div>
+
+    <div style="flex:1;">
+      <div style="font-weight:800; color: rgba(255,255,255,.92);">
+        Submission rejected
+      </div>
+
+      <div style="margin-top:6px; color: rgba(255,255,255,.82);">
+        {{ error }}
+      </div>
+
+      {% if code %}
+        <div style="margin-top:8px; font-size:0.85rem; color: rgba(255,255,255,.55);">
+          Code: <span class="lhx-mono">{{ code }}</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,212 @@
+{% load humanize %}
+
+<!-- 1. Floating Trigger Button -->
+<div class="lhx-hud-trigger" onclick="toggleHud()">
+  <svg viewBox="0 0 24 24">
+    <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+  </svg>
+</div>
+
+<!-- 2. The HUD Panel -->
+<div class="lhx-hud-panel" id="lhxHudPanel">
+  
+  <!-- Header -->
+  <div class="lhx-hud-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="lhx-game-font fs-5 text-white fw-bold">MY ACTIVITY</span>
+      {% if wallet_address %}
+        <span class="lhx-badge-game blue" style="font-size: 10px; padding: 2px 6px;">{{ wallet_address|slice:":4" }}...{{ wallet_address|slice:"-4:" }}</span>
+      {% endif %}
+    </div>
+    <button type="button" class="btn-close btn-close-white" onclick="toggleHud()"></button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="lhx-hud-tabs">
+    <div class="lhx-hud-tab active" onclick="switchHudTab('active', this)">Live Bets</div>
+    <div class="lhx-hud-tab" onclick="switchHudTab('history', this)">History</div>
+  </div>
+
+  <!-- Content Container -->
+  <div class="lhx-hud-content">
+    
+    <!-- =======================
+         TAB 1: ACTIVE / LIVE
+         ======================= -->
+    <div id="hud-tab-active">
+      <div id="hud-active-list">
+      {% if user_active_bets %}
+        {% for bet in user_active_bets %}
+        <div class="lhx-hud-card live mb-3">
+          
+          <div class="lhx-hud-card-header">
+             <div>
+               <div class="lhx-hud-lbl text-warning mb-1">Live Game</div>
+               <div class="fw-bold text-white lhx-game-font fs-5">{{ bet.game_name }}</div>
+               <div class="small text-secondary" style="font-size: 11px;">{{ bet.details }}</div>
+             </div>
+             <div class="text-end">
+               <div class="lhx-hud-lbl">Status</div>
+                <span id="hud-status-{{ bet.game_id }}">
+                  {% if bet.status == 'Winning' %}
+                    <span class="text-warning fw-bold small">👑 Winning</span>
+                  {% else %}
+                    <span class="lhx-accent fw-bold small">🟢 Live</span>
+                  {% endif %}
+                </span>
+             </div>
+          </div>
+
+          <!-- Big Countdown -->
+          <div class="lhx-hud-lbl mb-1 text-center">Round Ends In</div>
+          <div
+            class="lhx-hud-timer-big hud-js-timer"
+            id="hud-timer-{{ bet.game_id }}"
+            data-ends-at="{{ bet.ends_at|default:'' }}"
+          >
+            {{ bet.timer }}
+          </div>
+
+          <div class="lhx-hud-grid">
+             <div class="lhx-hud-stat-box">
+                <div class="lhx-hud-lbl">My Wager</div>
+                <div class="lhx-hud-val lhx-accent">{{ bet.wager|floatformat:5 }} SOL</div>
+             </div>
+             <div class="lhx-hud-stat-box">
+                <div class="lhx-hud-lbl">Pick / Pos</div>
+                <div class="lhx-hud-val text-white">{{ bet.your_pick|default:"-" }}</div>
+             </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-secondary py-5">
+          <div class="fs-1 opacity-25 mb-2">🎲</div>
+          <div class="small">No active bets found.</div>
+          <div class="small">Jump into a game!</div>
+        </div>
+      {% endif %}
+      </div>
+    </div>
+
+
+    <!-- =======================
+         TAB 2: HISTORY
+         ======================= -->
+    <div id="hud-tab-history" style="display: none;">
+      <div id="hud-history-list">
+      {% if user_past_history %}
+
+        {% for game in user_past_history %}
+        <div class="lhx-hist-row mb-2 {% if game.outcome == 'win' %}win{% else %}loss{% endif %}">
+          
+          <div class="lhx-hist-top">
+             <div>
+               <div class="fw-bold text-white lhx-game-font">{{ game.game_name }}</div>
+               <div class="small text-white-50" style="font-size: 10px;">{{ game.date }}</div>
+             </div>
+             <div class="text-end">
+               {% if game.outcome == 'win' %}
+                  <div class="lhx-hist-badge win">WON</div>
+                  <div class="lhx-accent fw-bold lhx-game-font mt-1">+{{ game.profit|floatformat:5 }} SOL</div>
+
+               {% else %}
+                  <div class="lhx-hist-badge loss">LOST</div>
+                  <div class="text-secondary lhx-game-font mt-1">-{{ game.wager|floatformat:5 }} SOL</div>
+
+               {% endif %}
+             </div>
+          </div>
+
+          <div class="lhx-hist-btm border-top border-white border-opacity-10 pt-2 mt-1">
+            {% if game.type == 'Lottery' %}
+              <div>
+                 <span class="lhx-hud-lbl">My Pick:</span> <span class="text-white lhx-mono">{{ game.your_pick }}</span>
+              </div>
+              <div>
+                 <span class="lhx-hud-lbl">Winner:</span> <span class="text-warning lhx-mono">{{ game.winning_pick }}</span>
+              </div>
+            {% else %}
+              <!-- FOMO -->
+              <div>
+                 <span class="lhx-hud-lbl">Bet:</span> <span class="text-white">{{ game.wager|floatformat:5 }} SOL</span>
+
+              </div>
+              <div>
+                 <span class="lhx-hud-lbl">King:</span>
+                <span class="text-warning lhx-mono" title="{{ game.winner }}">
+                  {% if game.winner == "Unknown" %}
+                    Unknown
+                  {% else %}
+                    {{ game.winner|slice:":4" }}...{{ game.winner|slice:"-4:" }}
+                  {% endif %}
+                </span>
+
+
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center text-secondary py-5 small">
+          No history available yet.
+        </div>
+      {% endif %}
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<!-- Dedicated HUD Script -->
+<script>
+  // 1. Toggle Logic
+  function toggleHud() {
+    const p = document.getElementById('lhxHudPanel');
+    p.classList.toggle('open');
+  }
+
+  // 2. Tab Switcher
+  function switchHudTab(tabName, el) {
+    document.getElementById('hud-tab-active').style.display = 'none';
+    document.getElementById('hud-tab-history').style.display = 'none';
+    
+    document.querySelectorAll('.lhx-hud-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+
+    document.getElementById('hud-tab-' + tabName).style.display = 'block';
+  }
+
+  // 3. HUD Specific Timer Logic (ends_at driven so WS resets work)
+  (function initHudTimers() {
+
+    function fmtTime(secs) {
+      secs = Math.max(0, secs|0);
+      const h = Math.floor(secs/3600);
+      const m = Math.floor((secs%3600)/60);
+      const s = secs%60;
+      return [h,m,s].map(v => v<10?"0"+v:v).join(':');
+    }
+
+    setInterval(() => {
+      const timers = document.querySelectorAll('.hud-js-timer');
+      timers.forEach(el => {
+        const endsAt = (el.dataset.endsAt || "").trim();
+        if (!endsAt) return;
+
+        const endsMs = Date.parse(endsAt);
+        const nowMs = Date.now();
+        const secs = Math.max(0, Math.floor((endsMs - nowMs) / 1000));
+        el.innerText = fmtTime(secs);
+
+        if (secs <= 0) el.classList.add('text-danger');
+      });
+    }, 1000);
+
+  })();
+
+</script>

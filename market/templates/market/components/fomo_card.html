@@ -1,0 +1,120 @@
+{% load humanize %}
+<div class="lhx-game-card w-100">
+    <!-- Header -->
+    <div class="lhx-game-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-1">
+                <span class="lhx-badge-game {% if game.limit_mode %}blue{% else %}red{% endif %}">{{ game.type }}</span>
+                <span class="lhx-badge-game yellow">{{ game.tag }}</span>
+            </div>
+            <!-- SOCIAL PROOF & FEE -->
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-1 text-white-50 small lhx-game-font">
+                    <span>👤</span>
+                    <span>
+                      <span id="fomo-card-betscount-{{ game.id }}">{{ game.bets_count|intcomma }}</span> Bets
+                    </span>
+                </div>
+
+                <div class="lhx-data-label text-end text-white-50 mb-0">Fee: 8%</div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-end mt-3">
+            <div>
+                <h3 class="lhx-title fs-3 lhx-game-font">{{ game.name }}</h3>
+                <p class="small text-secondary mb-0" style="max-width: 90%;">
+                    {{ game.desc }}
+                </p>
+            </div>
+            <div class="text-end">
+                <div class="lhx-data-label">Total Pot</div>
+                <div class="lhx-pot-display text-warning" id="fomo-card-pot-{{ game.id }}">
+                    {{ game.pot }}
+                    <span class="fs-6">SOL</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- UP-ONLY CHART (REAL, 10-min buckets) -->
+    <div class="lhx-chart-container">
+        <div class="lhx-axis-y">
+            <span>{{ game.pot|floatformat:2 }}</span>
+            <span>{{ game.pot|floatformat:2 }}</span>
+            <span>0</span>
+        </div>
+        <div class="lhx-chart-area" id="fomo-chart-{{ game.id }}">
+            <div class="lhx-chart-bars" style="height: 100%; display:flex; gap:4px; align-items:flex-end;">
+                {% for v in game.pot_series %}
+                <div class="lhx-chart-candle" style="height: {% widthratio v game.pot_series_max 100 %}%;" title="{{ v|floatformat:6 }} SOL"></div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="lhx-axis-x">
+            <span>-120m</span>
+            <span>-60m</span>
+            <span>NOW</span>
+        </div>
+    </div>
+    <!-- Body -->
+    <div class="lhx-game-body pt-3">
+        <div class="lhx-king-panel">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="lhx-data-label text-warning mb-1">👑 King of the Hill</div>
+                      <div class="lhx-mono fs-5 text-white" id="fomo-card-king-{{ game.id }}" title="{{ game.king }}">
+                        {% if game.king == "Unknown" %}
+                          Unknown
+                        {% else %}
+                          {{ game.king|slice:":4" }}...{{ game.king|slice:"-4:" }}
+                        {% endif %}
+                      </div>
+
+
+                </div>
+                <div class="text-end">
+                    <div class="lhx-data-label text-danger mb-1">Game Ends In</div>
+                    <div
+                      class="lhx-game-timer urgent js-timer"
+                      id="fomo-card-timer-{{ game.id }}"
+                      data-time="{{ game.timer }}"
+                      data-ends-at="{{ game.ends_at|default:'' }}"
+                    >
+                      {{ game.timer }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-end gap-3 mt-auto">
+            <div>
+              {% if game.limit_mode %}
+                <div class="lhx-data-label text-white">Fixed Entry</div>
+                <div class="fs-4 fw-bold lhx-game-font text-white">
+                  <span id="fomo-card-nextbid-{{ game.id }}">{{ game.next_bid|floatformat:5 }}</span> SOL
+                </div>
+              {% else %}
+                <div class="lhx-data-label text-success">Min Bid to Lead</div>
+                <div class="fs-4 fw-bold lhx-game-font text-white">
+                  <span id="fomo-card-nextbid-{{ game.id }}">{{ game.next_bid|floatformat:5 }}</span> SOL
+                </div>
+                    <div class="small text-secondary" style="font-size:10px">
+                    Prev: <span id="fomo-card-prevbid-{{ game.id }}">{{ game.prev_bid|floatformat:5 }}</span> + 3%
+                    </div>
+
+
+              {% endif %}
+            </div>
+            <button
+              type="button"
+              class="lhx-btn-game js-open-bet-modal"
+              id="fomo-card-btn-{{ game.id }}"
+              style="width: auto; flex-grow: 1;"
+              data-game-id="{{ game.id }}"
+            >
+              BET <span id="fomo-card-btnamt-{{ game.id }}">{{ game.next_bid|floatformat:5 }}</span> SOL
+            </button>
+
+        </div>
+    </div>
+</div>
+{# Chart is rendered server-side using game.pot_series (no JS needed) #}

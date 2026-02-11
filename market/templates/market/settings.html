@@ -1,0 +1,21 @@
+{% extends "market/base.html" %}
+{% block content %}
+<section class="mb-4">
+  <div class="lhx-pill">Account</div>
+  <h1 class="lhx-h1 mt-3 mb-2">Settings</h1>
+  <p class="lhx-sub mb-0">Control your LinkHash account preferences.</p>
+</section>
+
+<section class="mb-4">
+  <div class="lhx-card p-4">
+    <div class="lhx-muted small mb-2">Wallet</div>
+    <div class="lhx-mono">{{ wallet_address|slice:":6" }}...{{ wallet_address|slice:"-6:" }}</div>
+
+    <div class="lhx-divider my-3"></div>
+
+    <div class="lhx-muted small">
+      (Coming soon) notification settings, display preferences, campaign submission defaults, etc.
+    </div>
+  </div>
+</section>
+{% endblock %}

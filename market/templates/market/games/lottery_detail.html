@@ -1,0 +1,116 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 mb-3">
+    <a href="{% url 'games_home' %}" class="lhx-link-muted">← Back to Games</a>
+  </div>
+
+  <!-- Left: Game Info -->
+  <div class="col-lg-7">
+    <div class="lhx-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <span class="lhx-badge mb-2">{{ game.type|title }} Draw</span>
+          <h1 class="lhx-h2">{{ game.name }}</h1>
+        </div>
+        <div class="text-end">
+          <div class="small lhx-muted">Prize Pool</div>
+          <div class="fs-1 fw-bold lhx-accent">{{ game.pot }} SOL</div>
+        </div>
+      </div>
+
+      <div class="row g-3 text-center mb-5">
+        <div class="col-4">
+          <div class="p-3 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="small lhx-muted">Time Left</div>
+            <div class="fs-4 fw-bold text-white">{{ game.timer }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-3 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="small lhx-muted">Win Chance</div>
+            <div class="fs-4 fw-bold text-white">{{ game.win_chance }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-3 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="small lhx-muted">Ticket Price</div>
+            <div class="fs-4 fw-bold text-white">{{ game.price }} SOL</div>
+          </div>
+        </div>
+      </div>
+
+      <h5 class="lhx-title mb-3">How to Play</h5>
+      <ol class="lhx-muted small ps-3 mb-4">
+        <li class="mb-2">Send <strong>{{ game.price }} SOL</strong> (or multiples for multiple tickets) to the Game Wallet.</li>
+        <li class="mb-2">Copy the Transaction Signature (TX ID).</li>
+        <li class="mb-2">Paste it in the form on the right.</li>
+        <li>The engine verifies the block hash of your transaction to assign your numbers.</li>
+      </ol>
+
+      <div class="lhx-divider mb-4"></div>
+
+      <h5 class="lhx-title mb-3">Recent Entries</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-dark table-hover small">
+          <thead>
+            <tr><th>Block</th><th>User</th><th>Assigned Numbers</th></tr>
+          </thead>
+          <tbody>
+            {% for h in game.history %}
+            <tr>
+              <td class="lhx-mono">{{ h.block }}</td>
+              <td class="lhx-mono">{{ h.user }}</td>
+              <td class="lhx-accent">{{ h.nums }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Buy Form -->
+  <div class="col-lg-5">
+    <div class="lhx-card p-4 position-sticky" style="top: 100px;">
+      <h3 class="lhx-h2 mb-4">Buy Ticket</h3>
+
+      <div class="mb-4">
+        <label class="small text-secondary mb-1">Game Wallet Address</label>
+        <div class="input-group">
+          <input type="text" class="form-control bg-dark text-white border-secondary small lhx-mono" 
+                 value="{{ game.wallet }}" readonly id="walletInput">
+          <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('walletInput').value)">
+            Copy
+          </button>
+        </div>
+        <div class="form-text text-white-50 small">Send SOL here first.</div>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+          <label class="form-label small">Transaction Signature (TX ID)</label>
+          <input type="text" name="tx_signature" class="form-control bg-dark text-white border-secondary" 
+                 placeholder="e.g. 5xG9..." required>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small">Ticket Count</label>
+          <input type="number" class="form-control bg-dark text-white border-secondary" 
+                 placeholder="Automatically calculated based on amount sent" disabled>
+        </div>
+
+        {% if not wallet_address %}
+          <button type="button" class="lhx-btn w-100 opacity-50" disabled>Connect Wallet to Play</button>
+        {% else %}
+          <button type="submit" class="lhx-btn w-100">Verify & Register Ticket</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

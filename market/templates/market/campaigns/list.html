@@ -1,0 +1,323 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="mb-4">
+  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+      <div class="lhx-pill">Campaigns</div>
+      <h1 class="lhx-h1 mt-3 mb-2">Earn rewards by completing tasks.</h1>
+      <p class="lhx-sub mb-0">
+        Participate in DEX promotions and custom campaigns on LinkHash.
+      </p>
+    </div>
+
+    <div class="d-flex gap-2">
+      {% if request.session.wallet_address %}
+        <a class="lhx-btn" href="{% url 'campaign_create' %}">Create Campaign</a>
+      {% else %}
+        <button class="lhx-btn" type="button" disabled title="Connect wallet to create">
+          Create Campaign
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- ACTIVE LIST -->
+<section id="active-list">
+  <div class="row g-3">
+    {% for c in campaigns %}
+      <div class="col-md-6 col-lg-4">
+        <a href="{% url 'campaign_detail' c.id %}" class="text-decoration-none">
+          <div class="lhx-card p-4 h-100">
+
+            <!-- ✅ Cover Image (fallback) -->
+            <div class="mb-3" style="border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.06); background: rgba(0,0,0,.25);">
+              {% if c.cover_image %}
+                <img src="{{ c.cover_image.url }}" alt="cover" style="width:100%; height:160px; object-fit:cover; display:block;">
+              {% else %}
+                <img src="{% static 'market/images/default_campaign_cover.png' %}" alt="cover" style="width:100%; height:160px; object-fit:cover; display:block; opacity:.9;">
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="lhx-title">{{ c.title }}</div>
+                {% if c.description %}
+                  <div class="lhx-muted small mt-1">{{ c.description|truncatechars:120 }}</div>
+                {% else %}
+                  <div class="lhx-muted small mt-1">No description.</div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex gap-2 flex-wrap justify-content-end">
+                {% if c.campaign_type == "dex_promo" %}
+                  <span class="lhx-badge lhx-badge-major">DEX</span>
+                {% else %}
+                  <span class="lhx-badge">General</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="lhx-divider my-3"></div>
+
+            <div class="d-flex justify-content-between lhx-muted small">
+              <div>Fee: {{ c.submission_fee_lhx|intcomma }} LHX</div>
+              <div>
+                {% if c.ends_at %}
+                  Ends {{ c.ends_at|date:"Y-m-d" }}
+                {% else %}
+                  Active
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        </a>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="lhx-card p-4">
+          <div class="lhx-muted">No active campaigns yet.</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {# ✅ ACTIVE Pagination (항상 보이게) #}
+  <div class="mt-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="lhx-muted small">
+      Page <b>{{ campaigns.number }}</b> of <b>{{ campaigns.paginator.num_pages }}</b>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if campaigns.has_previous %}
+        <a class="lhx-btn-sm lhx-btn-ghost"
+           href="?cp={{ campaigns.previous_page_number }}&pp={{ past_campaigns.number }}#active-list">
+          ← Prev
+        </a>
+      {% else %}
+        <span class="lhx-btn-sm lhx-btn-ghost" style="opacity:.45; pointer-events:none;">← Prev</span>
+      {% endif %}
+
+      {# 페이지가 1개여도 "1" 버튼은 항상 표시됨 #}
+      {% for n in campaigns.paginator.page_range %}
+        {% if n == campaigns.number %}
+          <span class="lhx-btn-sm" style="pointer-events:none;">{{ n }}</span>
+        {% else %}
+          <a class="lhx-btn-sm lhx-btn-ghost"
+             href="?cp={{ n }}&pp={{ past_campaigns.number }}#active-list">
+            {{ n }}
+          </a>
+        {% endif %}
+      {% endfor %}
+
+      {% if campaigns.has_next %}
+        <a class="lhx-btn-sm lhx-btn-ghost"
+           href="?cp={{ campaigns.next_page_number }}&pp={{ past_campaigns.number }}#active-list">
+          Next →
+        </a>
+      {% else %}
+        <span class="lhx-btn-sm lhx-btn-ghost" style="opacity:.45; pointer-events:none;">Next →</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<div class="mt-4"></div>
+
+<!-- PAST LIST -->
+<section id="past-list">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="lhx-h2 mb-0" style="font-size:18px;">Past Campaigns</h2>
+    <div class="lhx-muted small">Ended campaigns are kept for transparency.</div>
+  </div>
+
+  <div class="row g-3">
+    {% for c in past_campaigns %}
+      <div class="col-md-6 col-lg-4">
+        <a href="{% url 'campaign_detail' c.id %}" class="text-decoration-none">
+          <div class="lhx-card p-4 h-100" style="opacity:.85;">
+
+            <!-- ✅ Cover Image (fallback) -->
+            <div class="mb-3" style="border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.06); background: rgba(0,0,0,.25);">
+              {% if c.cover_image %}
+                <img src="{{ c.cover_image.url }}" alt="cover" style="width:100%; height:160px; object-fit:cover; display:block;">
+              {% else %}
+                <img src="{% static 'market/images/default_campaign_cover.png' %}" alt="cover" style="width:100%; height:160px; object-fit:cover; display:block; opacity:.9;">
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="lhx-title">{{ c.title }}</div>
+                {% if c.description %}
+                  <div class="lhx-muted small mt-1">{{ c.description|truncatechars:120 }}</div>
+                {% else %}
+                  <div class="lhx-muted small mt-1">No description.</div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex gap-2 flex-wrap justify-content-end">
+                <span class="lhx-badge" style="border-color:rgba(255,255,255,.15);">Past</span>
+              </div>
+            </div>
+
+            <div class="lhx-divider my-3"></div>
+
+            <div class="d-flex justify-content-between lhx-muted small">
+              <div>Fee: {{ c.submission_fee_lhx|intcomma }} LHX</div>
+              <div>
+                {% if c.ends_at %}
+                  Ended {{ c.ends_at|date:"Y-m-d" }}
+                {% else %}
+                  Ended
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        </a>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="lhx-card p-4">
+          <div class="lhx-muted">No past campaigns yet.</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {# ✅ PAST Pagination (항상 보이게) #}
+  <div class="mt-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="lhx-muted small">
+      Page <b>{{ past_campaigns.number }}</b> of <b>{{ past_campaigns.paginator.num_pages }}</b>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if past_campaigns.has_previous %}
+        <a class="lhx-btn-sm lhx-btn-ghost"
+           href="?pp={{ past_campaigns.previous_page_number }}&cp={{ campaigns.number }}#past-list">
+          ← Prev
+        </a>
+      {% else %}
+        <span class="lhx-btn-sm lhx-btn-ghost" style="opacity:.45; pointer-events:none;">← Prev</span>
+      {% endif %}
+
+      {# 페이지가 1개여도 "1" 버튼은 항상 표시됨 #}
+      {% for n in past_campaigns.paginator.page_range %}
+        {% if n == past_campaigns.number %}
+          <span class="lhx-btn-sm" style="pointer-events:none;">{{ n }}</span>
+        {% else %}
+          <a class="lhx-btn-sm lhx-btn-ghost"
+             href="?pp={{ n }}&cp={{ campaigns.number }}#past-list">
+            {{ n }}
+          </a>
+        {% endif %}
+      {% endfor %}
+
+      {% if past_campaigns.has_next %}
+        <a class="lhx-btn-sm lhx-btn-ghost"
+           href="?pp={{ past_campaigns.next_page_number }}&cp={{ campaigns.number }}#past-list">
+          Next →
+        </a>
+      {% else %}
+        <span class="lhx-btn-sm lhx-btn-ghost" style="opacity:.45; pointer-events:none;">Next →</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  // 어떤 섹션의 pagination을 AJAX로 처리할지
+  const SECTION_SELECTORS = ["#active-list", "#past-list"];
+
+  function isPaginationLink(a) {
+    if (!a) return false;
+    // pagination 버튼 클래스에 맞게 필터
+    return a.classList.contains("lhx-btn-sm");
+  }
+
+  async function ajaxSwapSection(url, sectionSelector) {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+      credentials: "same-origin",
+    });
+
+    if (!res.ok) {
+      // 실패하면 그냥 원래 이동(새로고침)로 폴백
+      window.location.href = url;
+      return;
+    }
+
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+
+    const newSection = doc.querySelector(sectionSelector);
+    const curSection = document.querySelector(sectionSelector);
+
+    if (!newSection || !curSection) {
+      // 섹션을 못 찾으면 폴백
+      window.location.href = url;
+      return;
+    }
+
+    // 섹션 교체
+    curSection.replaceWith(newSection);
+
+    // 주소창만 갱신 (페이지 리로드 없음)
+    history.pushState({ sectionSelector }, "", url);
+
+    // 섹션으로 스크롤(원하면 smooth)
+    const anchorId = sectionSelector.replace("#", "");
+    const anchorEl = document.getElementById(anchorId);
+    if (anchorEl) {
+      anchorEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // 이벤트 재바인딩(교체됐으니 다시 걸어줘야 함)
+    bindPaginationHandlers();
+  }
+
+  function bindPaginationHandlers() {
+    SECTION_SELECTORS.forEach((selector) => {
+      const section = document.querySelector(selector);
+      if (!section) return;
+
+      // 섹션 내부에서 클릭 위임
+      section.onclick = (e) => {
+        const a = e.target.closest("a");
+        if (!isPaginationLink(a)) return;
+
+        // detail 카드 클릭은 그대로 두고(페이지 이동), pagination만 가로채기
+        // pagination만 lhx-btn-sm 이므로 여기서 분리됨
+        e.preventDefault();
+
+        const url = a.getAttribute("href");
+        ajaxSwapSection(url, selector);
+      };
+    });
+  }
+
+  // 뒤로가기/앞으로가기 처리
+  window.addEventListener("popstate", async (e) => {
+    // popstate에서는 현재 URL을 다시 fetch해서 두 섹션 중 필요한 걸 갱신
+    // (간단하게 둘 다 갱신해도 됨)
+    const url = window.location.href;
+    for (const selector of SECTION_SELECTORS) {
+      await ajaxSwapSection(url, selector);
+    }
+  });
+
+  bindPaginationHandlers();
+})();
+</script>
+
+
+{% endblock %}

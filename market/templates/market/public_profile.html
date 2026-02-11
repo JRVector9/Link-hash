@@ -1,0 +1,78 @@
+{% extends "market/base.html" %}
+{% load static %}
+
+{% block content %}
+{% static 'market/icons/default_icon.png' as default_avatar %}
+
+<section class="mb-4">
+  <div class="lhx-pill">Profile</div>
+
+  <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
+    <div>
+      <h1 class="lhx-h1 mt-3 mb-2">User Profile</h1>
+      <p class="lhx-sub mb-0">Public profile.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="lhx-btn-outline" href="{% url 'leaderboard' %}">← Back to Leaderboard</a>
+      {% if wallet_address %}
+        <a class="lhx-btn-sm" href="{% url 'profile' %}">My Profile</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="mb-4">
+  <div class="lhx-card p-4">
+
+    <div class="lhx-muted small mb-2">Wallet</div>
+    <div class="lhx-card p-3 mb-4" style="background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;">
+      <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div class="lhx-mono" style="word-break: break-all;">{{ target.wallet_address }}</div>
+        <a class="lhx-btn-sm" href="https://solscan.io/account/{{ target.wallet_address }}" target="_blank" rel="noopener">Solscan ↗</a>
+      </div>
+    </div>
+
+    <div class="lhx-panel p-4" style="border-radius:16px;">
+      <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:1px solid rgba(255,255,255,0.10);">
+            {% if target.avatar %}
+              <img src="{{ target.avatar.url }}?v={{ target.created_at|date:'U' }}"
+                   alt="avatar" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+              <img src="{{ default_avatar }}"
+                   alt="default" style="width:100%;height:100%;object-fit:cover;opacity:.95;">
+            {% endif %}
+          </div>
+
+          <div style="line-height:1.35;">
+            <div class="fw-semibold" style="color: rgba(255,255,255,.90); font-size: 1.05rem;">
+              {% if target.display_name %}{{ target.display_name }}{% else %}Unnamed{% endif %}
+            </div>
+            <div class="lhx-mono lhx-muted small" style="opacity:.75;">
+              {{ target.wallet_address|slice:":4" }}...{{ target.wallet_address|slice:"-4:" }}
+            </div>
+          </div>
+        </div>
+
+        <div class="text-end">
+          <div class="lhx-muted small mb-1">Points</div>
+          <div class="lhx-mono" style="font-size:1.2rem; color: rgba(210,255,240,.95);">
+            {{ target.points|default:"0" }} pts
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="lhx-muted small mb-2">Bio</div>
+        <div class="lhx-muted" style="white-space:pre-wrap; opacity:.9;">
+          {% if target.bio %}{{ target.bio }}{% else %}<span style="opacity:.6;">No bio yet.</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

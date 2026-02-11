@@ -1,0 +1,85 @@
+{% load humanize %}
+<a href="{% url 'lottery_detail' game.id %}" class="lhx-game-card w-100">
+  <!-- Header -->
+  <div class="lhx-game-header">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="mb-2 d-flex gap-1">
+          <span class="lhx-badge-game blue">{{ game.type }}</span>
+          <span class="lhx-badge-game yellow">{{ game.tag }}</span>
+          {% if game.rollover > 0 %}
+            <span class="lhx-badge-game red">Rollover</span>
+          {% endif %}
+        </div>
+        <h3 class="lhx-title fs-3 lhx-game-font">{{ game.name }}</h3>
+        <p class="small text-secondary mb-0 mt-1">{{ game.desc }}</p>
+      </div>
+      <div class="text-end">
+          <div class="lhx-data-label">Prize Pool</div>
+          <!-- Pot is Yellow -->
+          <div class="lhx-pot-display">{{ game.pot|floatformat:1 }} <span class="fs-6">SOL</span></div>
+          
+          <!-- CLEAR EXPLANATION FOR ROLLOVER -->
+          {% if game.rollover > 0 %}
+            <div class="text-warning small lhx-game-font" style="font-size: 11px; margin-top: -4px;">
+              +{{ game.rollover }} SOL from prev. round
+            </div>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="lhx-game-body">
+    <div class="row g-3 mb-4">
+      <div class="col-6">
+        <!-- HEADER LABEL: Changes based on state -->
+        <div class="lhx-data-label">
+          {% if game.winning_numbers %}Winning Numbers{% else %}Draw In{% endif %}
+        </div>
+
+        <!-- CONTENT: Timer OR Lottery Balls -->
+        {% if game.winning_numbers %}
+          <div class="lhx-ball-container">
+            {% for num in game.winning_numbers %}
+              <div class="lhx-lotto-ball">{{ num }}</div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="lhx-game-timer urgent js-timer" data-time="{{ game.timer }}">{{ game.timer }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="col-6 text-end">
+        <div class="lhx-data-label">Probability</div>
+        <div class="lhx-data-val text-white">Est. {{ game.win_chance }}</div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+       <div class="col-4">
+         <div class="p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+           <div class="lhx-data-label">Price</div>
+           <div class="lhx-data-val lhx-accent">{{ game.ticket_price }} SOL</div>
+         </div>
+       </div>
+       <div class="col-4">
+          <div class="p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+            <div class="lhx-data-label">Players</div>
+            <div class="lhx-data-val">{{ game.participants }}</div>
+          </div>
+        </div>
+        <!-- Removed Rollover Box here since we added it to Header -->
+        <div class="col-4">
+          <div class="p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+            <div class="lhx-data-label">Fee</div>
+            <div class="lhx-data-val text-white-50">8%</div>
+          </div>
+        </div>
+    </div>
+
+    <div class="mt-auto pt-4">
+      <button class="lhx-btn-game">BUY TICKET</button>
+    </div>
+  </div>
+</a>

@@ -1,0 +1,85 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<section class="mb-4">
+  <div class="lhx-pill">Announcements</div>
+  <h1 class="lhx-h1 mt-3 mb-2">LinkHash Updates</h1>
+  <p class="lhx-sub mb-0">Official announcements from the LinkHash team.</p>
+</section>
+
+<section class="mb-4">
+  <div class="lhx-card p-0 overflow-hidden">
+
+    <div class="p-3 p-md-4" style="border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="lhx-muted small" style="opacity:.85;">
+          Total: <span class="lhx-mono">{{ rows.paginator.count|intcomma }}</span>
+        </div>
+        <a href="{% url 'leaderboard' %}" class="lhx-btn-sm lhx-btn-ghost">Leaderboard</a>
+      </div>
+    </div>
+
+    <div class="p-2 p-md-3">
+      {% for a in rows %}
+        <a href="{% url 'announcement_detail' a.slug %}"
+           class="d-block lhx-card p-3 mb-2"
+           style="background: rgba(0,0,0,0.18); border-radius:14px; text-decoration:none;">
+
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                {% if a.pinned %}
+                  <span class="lhx-badge lhx-badge-major">Pinned</span>
+                {% endif %}
+                <div class="fw-semibold" style="color: rgba(255,255,255,0.92);">
+                  {{ a.title }}
+                </div>
+              </div>
+              <div class="lhx-muted small" style="opacity:.8;">
+                {{ a.published_at|default:a.created_at|date:"Y-m-d H:i" }}
+              </div>
+            </div>
+
+            <div class="lhx-muted small" style="opacity:.7; white-space:nowrap;">
+              View →
+            </div>
+          </div>
+        </a>
+      {% empty %}
+        <div class="lhx-muted p-4 text-center" style="opacity:.8;">
+          No announcements yet.
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- pagination -->
+    <div class="p-3 p-md-4" style="border-top:1px solid rgba(255,255,255,0.08);">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="lhx-muted small">
+          Page <span class="lhx-mono">{{ rows.number }}</span> / <span class="lhx-mono">{{ rows.paginator.num_pages }}</span>
+        </div>
+
+        <div class="d-flex gap-2">
+          {% if rows.has_previous %}
+            <a class="lhx-btn-sm lhx-btn-ghost" href="?page={{ rows.previous_page_number }}">Prev</a>
+          {% else %}
+            <span class="lhx-btn-sm lhx-btn-ghost" style="opacity:.45; pointer-events:none;">Prev</span>
+          {% endif %}
+
+          <span class="lhx-btn-sm" style="pointer-events:none;">{{ rows.number }}</span>
+
+          {% if rows.has_next %}
+            <a class="lhx-btn-sm lhx-btn-ghost" href="?page={{ rows.next_page_number }}">Next</a>
+          {% else %}
+            <span class="lhx-btn-sm lhx-btn-ghost" style="opacity:.45; pointer-events:none;">Next</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,686 @@
+{% extends "market/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="mb-5">
+  <div class="lhx-pill">Partnership</div>
+  <h1 class="lhx-h1 mt-3 mb-2">Grow Your Project with LinkHash</h1>
+  <p class="lhx-sub mb-0">
+    LinkHash provides advertising, incubation, and liquidity-driven growth solutions
+    for DEX-native crypto projects — plus prediction market research, educational tools,
+    and fun Web3.0 games for community engagement.
+  </p>
+</section>
+
+<!-- SPONSORED ADS (INFO + SUBMIT) -->
+<section class="mb-5">
+  <div class="lhx-card p-4">
+
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+      <div>
+        <h2 class="lhx-h2 mb-2">Sponsored Ads</h2>
+        <div class="lhx-muted">
+          Simple and transparent advertising solutions to get your project visible on LinkHash.
+        </div>
+      </div>
+
+      <div class="lhx-muted small" style="max-width: 520px; opacity:.85;">
+        <strong>Display logic:</strong>
+        Premium Ads are always shown before Basic Ads.
+        Within each tier, projects are sorted by market capitalization (descending).
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- BASIC AD -->
+      <div class="col-lg-6">
+        <div class="lhx-card p-4 h-100" style="background: rgba(0,0,0,0.18); border-radius:16px;">
+          <div class="lhx-badge mb-2">Sponsored</div>
+          <h3 class="fw-semibold mb-2">Basic Ad</h3>
+
+          <ul class="lhx-muted small mb-0" style="line-height:1.7;">
+            <li><strong>{{ BASIC_AD_LHX|default:"100,000" }}</strong> LHX payment</li>
+            <li>Homepage top exposure for <strong>{{ BASIC_AD_DAYS|default:"14" }}</strong> days</li>
+            <li>Daily shoutouts on LinkHash X (Twitter)</li>
+            <li>Displayed under Premium Ads</li>
+          </ul>
+
+          <div class="lhx-muted small mt-3" style="opacity:.7;">
+            Ideal for early-stage projects seeking visibility.
+          </div>
+        </div>
+      </div>
+
+      <!-- PREMIUM AD -->
+      <div class="col-lg-6">
+        <div class="lhx-card p-4 h-100"
+             style="background: rgba(20,40,30,0.35); border-radius:16px; border:1px solid rgba(80,255,180,0.25);">
+          <div class="lhx-badge lhx-badge-major mb-2">Premium</div>
+          <h3 class="fw-semibold mb-2">Premium Ad</h3>
+
+          <ul class="lhx-muted small mb-0" style="line-height:1.7;">
+            <li><strong>{{ PREMIUM_AD_LHX|default:"250,000" }}</strong> LHX payment</li>
+            <li>Homepage exposure for <strong>{{ PREMIUM_AD_DAYS|default:"60" }}</strong> days</li>
+            <li>Priority placement before Basic Ads</li>
+            <li>Daily shoutouts on LinkHash X & Telegram Group</li>
+            <li>Premium carousel positioning</li>
+          </ul>
+
+          <div class="lhx-muted small mt-3" style="opacity:.7;">
+            Designed for projects aiming for sustained traction.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="lhx-divider my-4"></div>
+
+    <!-- PAYMENT INSTRUCTIONS -->
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="lhx-panel p-3 h-100" style="border-radius:16px;">
+          <div class="fw-semibold mb-1">Payment Recipient</div>
+          <div class="lhx-muted small mb-2" style="opacity:.8;">
+            Send LHX from your connected wallet to the dev wallet below.
+            Then submit the transaction signature for on-chain verification.
+          </div>
+
+          <div class="lhx-muted small mt-3" style="opacity:.9;">
+            <div class="mb-2">✅ Dev Wallet</div>
+            {# ✅ copy target (value only) #}
+            <input
+              type="text"
+              id="devWalletValue"
+              class="visually-hidden"
+              value="{{ DEV_WALLET|default:'GkWMcnSNQP4aTVZruJMSwjhzW3VvEza3iZXi3NEwzPKE' }}"
+              readonly
+            />
+
+            <div class="d-flex align-items-start gap-2">
+              <div class="lhx-mono flex-grow-1" id="devWalletText" style="word-break:break-all;">
+                {{ DEV_WALLET|default:"GkWMcnSNQP4aTVZruJMSwjhzW3VvEza3iZXi3NEwzPKE" }}
+              </div>
+
+              <button
+                type="button"
+                id="copyDevWalletBtn"
+                class="lhx-btn-sm lhx-btn-ghost"
+                style="white-space:nowrap; padding:6px 10px;"
+                aria-label="Copy dev wallet"
+                title="Copy"
+              >
+                Copy
+              </button>
+            </div>
+
+            <div class="mt-2" style="opacity:.75;">
+              Token decimals: <span class="lhx-mono">{{ LHX_DECIMALS|default:"6" }}</span>
+            </div>
+
+            {# ✅ tiny toast #}
+            <div id="copyDevWalletToast"
+                 class="lhx-muted small"
+                 style="display:none; margin-top:8px; opacity:.85;">
+              ✅ Copied!
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="lhx-panel p-3 h-100" style="border-radius:16px;">
+          <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-2">
+            <div>
+              <div class="fw-semibold">Submit your Sponsored Ad</div>
+              <div class="lhx-muted small" style="opacity:.85;">
+                Connect your wallet first. We verify payment on-chain automatically.
+              </div>
+            </div>
+          </div>
+
+          {% if not request.session.wallet_address %}
+            <div class="lhx-muted small" style="opacity:.85;">
+              Please connect your wallet to submit an ad.
+            </div>
+          {% else %}
+            <form id="sponsoredAdForm" method="post" action="{% url 'submit_ad' %}" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              <div class="row g-3">
+
+                <div class="col-md-4">
+                  <label class="lhx-muted small mb-1 d-block">Ad Tier</label>
+                  <select name="tier" class="form-select" id="adTierSelect">
+                    <option value="basic">Basic ({{ BASIC_AD_LHX|default:"100,000" }} LHX / {{ BASIC_AD_DAYS|default:"14" }} days)</option>
+                    <option value="premium">Premium ({{ PREMIUM_AD_LHX|default:"250,000" }} LHX / {{ PREMIUM_AD_DAYS|default:"60" }} days)</option>
+                  </select>
+                </div>
+
+                <div class="col-md-8">
+                  <label class="lhx-muted small mb-1 d-block">Transaction Signature</label>
+                  <input name="tx_signature" class="form-control"
+                         placeholder="Paste transaction signature (tx hash) here" required>
+                  <div class="lhx-muted small mt-1" style="opacity:.7;">
+                    Tip: Solana → Solscan Signature / BNB → BscScan Tx Hash
+                  </div>
+                </div>
+
+                <!-- ✅ NEW: chain / launchpad / graduated -->
+                <div class="col-md-4">
+                  <label class="lhx-muted small mb-1 d-block">Chain</label>
+                  <select name="chain" class="form-select" id="chainSelect">
+                    <option value="sol" selected>Solana</option>
+                    <option value="bnb">BNB Chain</option>
+                    <option value="others">Others</option>
+                  </select>
+                  <div class="lhx-muted small mt-1" style="opacity:.65;">
+                    Used for display + launchpad validation.
+                  </div>
+                </div>
+
+                <div class="col-md-5">
+                  <label class="lhx-muted small mb-1 d-block">Launchpad (optional)</label>
+                  <select name="launchpad" class="form-select" id="launchpadSelect">
+                    <option value="none" selected>None</option>
+                    <option value="pumpfun">pump.fun (Solana)</option>
+                    <option value="fourmeme">four.meme (BNB)</option>
+                  </select>
+                  <div class="lhx-muted small mt-1" id="launchpadHint" style="opacity:.65;">
+                    Pick a launchpad only if you launched via a launchpad.
+                  </div>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                  <div class="form-check" style="margin-bottom: 6px;">
+                    <input class="form-check-input" type="checkbox" id="graduatedCheck" name="graduated" disabled>
+                    <label class="form-check-label lhx-muted small" for="graduatedCheck" style="opacity:.9;">
+                      Graduated
+                    </label>
+                  </div>
+                </div>
+                <!-- ✅ END NEW -->
+
+                <div class="col-md-6">
+                  <label class="lhx-muted small mb-1 d-block">Project Name</label>
+                  <input name="project_name" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="lhx-muted small mb-1 d-block">Symbol</label>
+                  <input name="symbol" class="form-control" placeholder="Optional">
+                </div>
+
+                <div class="col-12">
+                  <label class="lhx-muted small mb-1 d-block">Token Address (Mint / Contract)</label>
+                  <input name="token_address" class="form-control" placeholder="Optional">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="lhx-muted small mb-1 d-block">Website</label>
+                  <input name="website" class="form-control" placeholder="https://...">
+                </div>
+
+                <!-- ✅ DEX (single legacy) + DEX Links (up to 3) -->
+                <div class="col-12">
+                  <label class="lhx-muted small mb-1 d-block">DEX URL (Legacy / Optional)</label>
+                  <input name="dex_url" class="form-control" placeholder="Optional (DexScreener main link)">
+                  <div class="lhx-muted small mt-1" style="opacity:.65;">
+                    This field is kept for backward compatibility & DexScreener sync. You can also add up to 3 DEX links below.
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="lhx-muted small mb-1 d-block">DEX Links (Optional, up to 3)</label>
+
+                  <input name="dex_links[]" class="form-control mb-2" placeholder="DEX Link #1 (e.g., DexScreener / Raydium / Jupiter / pump.fun / four.meme)">
+                  <input name="dex_links[]" class="form-control mb-2" placeholder="DEX Link #2 (optional)">
+                  <input name="dex_links[]" class="form-control" placeholder="DEX Link #3 (optional)">
+
+                  <div class="lhx-muted small mt-1" style="opacity:.65;">
+                    Leave blank if not available. We’ll store only valid URLs.
+                  </div>
+                </div>
+
+                <!-- ✅ CEX Links (up to 10) -->
+                <div class="col-12">
+                  <label class="lhx-muted small mb-1 d-block">CEX Links (Optional, up to 10)</label>
+
+                  <div class="row g-2">
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #1 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #2 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #3 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #4 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #5 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #6 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #7 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #8 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #9 (optional)"></div>
+                    <div class="col-md-6"><input name="cex_links[]" class="form-control" placeholder="CEX Link #10 (optional)"></div>
+                  </div>
+
+                  <div class="lhx-muted small mt-1" style="opacity:.65;">
+                    Add exchange listing pages if available (Binance/Upbit/Bithumb/Bitget/MEXC etc.). Optional.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="lhx-muted small mb-1 d-block">X URL</label>
+                  <input name="x_url" class="form-control" placeholder="https://x.com/...">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="lhx-muted small mb-1 d-block">Telegram URL</label>
+                  <input name="tg_url" class="form-control" placeholder="https://t.me/...">
+                </div>
+
+                <div class="col-12">
+                  <label class="lhx-muted small mb-1 d-block">Banner Image (Sponsored Ad)</label>
+                  <input type="file" name="banner_image" class="form-control" accept="image/*">
+                  <div class="lhx-muted small mt-1" style="opacity:.7;">
+                    Recommended: 1:1 logo or wide banner. PNG/JPG/WebP.
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="lhx-muted small mb-1 d-block">Description</label>
+                  <textarea name="description" class="form-control" rows="3"
+                            placeholder="Short project description (optional)"></textarea>
+                </div>
+
+              </div>
+
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="submit" class="lhx-btn">Verify Payment & Publish</button>
+              </div>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- LINKHASH PROGRAMS -->
+<section class="mb-5">
+  <div class="lhx-card p-4">
+    <h2 class="lhx-h2 mb-2">LinkHash Programs</h2>
+    <div class="lhx-muted mb-4">
+      End-to-end growth programs tailored for serious crypto founders — plus research and gameplay modules to keep your community active.
+    </div>
+
+    <div class="row g-4">
+
+      <!-- INCUBATION KIT -->
+      <div class="col-lg-6">
+        <div class="lhx-card p-4 h-100" style="background: rgba(0,0,0,0.18); border-radius:16px;">
+          <div class="lhx-badge lhx-badge-major mb-2">Best Partner</div>
+          <h3 class="fw-semibold mb-2">Incubation Kit</h3>
+
+          <div class="lhx-muted small" style="line-height:1.7;">
+            A full launch solution for projects that have not yet issued a token.
+            <br><br>
+            <strong>Includes:</strong>
+            <ul>
+              <li>Premium Ad-level homepage exposure</li>
+              <li>Token creation on pump.fun (Solana) or four.meme (BNB Chain)</li>
+              <li>Website, X, Telegram setup</li>
+              <li>Tokenomics design & post-launch alignment</li>
+              <li>Multiple social shoutouts & campaign execution</li>
+              <li>Market making & liquidity support</li>
+              <li>Active assistance toward launchpad graduation</li>
+              <li>Optional: prediction market study content + community quests</li>
+              <li>Optional: fun Web3.0 mini-games for engagement</li>
+            </ul>
+
+            <strong>Requirements:</strong>
+            <ul>
+              <li>20 SOL</li>
+              <li>30% creator rewards distribution (pump.fun)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCELERATION KIT -->
+      <div class="col-lg-6">
+        <div class="lhx-card p-4 h-100" style="background: rgba(0,0,0,0.18); border-radius:16px;">
+          <div class="lhx-badge lhx-badge-major mb-2">Best Partner</div>
+          <h3 class="fw-semibold mb-2">Acceleration Kit</h3>
+
+          <div class="lhx-muted small" style="line-height:1.7;">
+            Growth acceleration for already launched tokens across any DEX.
+            <br><br>
+            <strong>Includes:</strong>
+            <ul>
+              <li>Premium Ad-level homepage exposure</li>
+              <li>LinkHash social shoutouts</li>
+              <li>Active market making & liquidity injection</li>
+              <li>Meaningful trading volume creation</li>
+              <li>Graduation assistance (if launchpad-based)</li>
+              <li>Optional: prediction market research placements</li>
+              <li>Optional: Web3.0 mini-games + quest campaigns</li>
+            </ul>
+
+            <strong>Requirements:</strong>
+            <ul>
+              <li>10 SOL</li>
+              <li>40% creator rewards distribution (pump.fun)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="mb-3">
+  <div class="lhx-card p-4 text-center">
+    <h2 class="lhx-h2 mb-2">Need a custom partnership?</h2>
+    <div class="lhx-muted mb-3">
+      For Launch Kits / Liquidity & Market Support / Trading Inflow plans / Prediction market study collaborations / Web3 game integrations, contact the LinkHash team.
+    </div>
+
+    <div class="lhx-muted small">
+      Telegram: <span class="lhx-mono">@lhxluke</span> ·
+      Email: <span class="lhx-mono">lukkiezzang@gmail.com</span>
+    </div>
+  </div>
+</section>
+
+<!-- ✅ Submission Complete Modal -->
+<div id="adSubmitModal" class="lhx-modal-overlay" style="display:none;">
+  <div class="lhx-modal">
+    <div class="lhx-modal-title">Submission complete!</div>
+
+    <!-- ✅ points earned line -->
+    <div class="lhx-modal-points" id="adEarnedPointsWrap" style="display:none;">
+      <div style="
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(10, 25, 18, 0.55);
+        border: 1px solid rgba(80,255,180,0.22);
+      ">
+        <div class="lhx-mono" style="font-size: 14px; color: rgba(210,255,235,0.98);">
+          ✅ You earned <strong>+<span id="adEarnedPoints">0</span> points</strong>
+        </div>
+        <div class="lhx-muted small" style="opacity:.85; margin-top:2px;">
+          Added to your leaderboard score.
+        </div>
+      </div>
+    </div>
+
+    <div class="lhx-modal-body" style="margin-top:10px;">
+      If you have any questions contact <span class="lhx-mono">@lhxluke</span> telegram regarding sponsorship ad
+    </div>
+
+    <div class="lhx-modal-actions">
+      <button type="button" id="adSubmitModalClose" class="lhx-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .lhx-modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .lhx-modal{
+    width: min(520px, 100%);
+    border-radius: 18px;
+    background: rgba(18,18,18,0.95);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+    padding: 18px 18px 16px;
+  }
+  .lhx-modal-title{
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .lhx-modal-body{
+    color: rgba(255,255,255,0.78);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .lhx-modal-actions{
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  (function () {
+    // =========================
+    // ✅ Copy Dev Wallet
+    // =========================
+    const copyBtn = document.getElementById("copyDevWalletBtn");
+    const devWalletInput = document.getElementById("devWalletValue");
+    const toast = document.getElementById("copyDevWalletToast");
+
+    async function copyText(text) {
+      // modern clipboard
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      ta.style.top = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    }
+
+    function showToast(msg) {
+      if (!toast) return;
+      toast.textContent = msg || "✅ Copied!";
+      toast.style.display = "block";
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => {
+        toast.style.display = "none";
+      }, 1600);
+    }
+
+    if (copyBtn && devWalletInput) {
+      copyBtn.addEventListener("click", async () => {
+        const value = (devWalletInput.value || "").trim();
+        if (!value) return;
+
+        try {
+          await copyText(value);
+          showToast("✅ Copied!");
+          // small UX: temporary label
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = "Copied";
+          copyBtn.disabled = true;
+          setTimeout(() => {
+            copyBtn.textContent = prev;
+            copyBtn.disabled = false;
+          }, 900);
+        } catch (e) {
+          showToast("Copy failed. Please select & copy.");
+        }
+      });
+    }
+
+    // =========================
+    // ✅ Sponsored Ad form logic (existing)
+    // =========================
+    const form = document.getElementById("sponsoredAdForm");
+    if (!form) return;
+
+    const overlay = document.getElementById("adSubmitModal");
+    const closeBtn = document.getElementById("adSubmitModalClose");
+
+    // ✅ points in modal
+    const pointsWrap = document.getElementById("adEarnedPointsWrap");
+    const pointsEl = document.getElementById("adEarnedPoints");
+
+    // ✅ NEW: chain / launchpad / graduated UX sync + validation
+    const chainSelect = document.getElementById("chainSelect");
+    const launchpadSelect = document.getElementById("launchpadSelect");
+    const graduatedCheck = document.getElementById("graduatedCheck");
+
+    const launchpadHint = document.getElementById("launchpadHint");
+
+    function setHint(msg, isBad) {
+      if (!launchpadHint) return;
+      launchpadHint.textContent = msg;
+      launchpadHint.style.opacity = isBad ? "0.95" : "0.65";
+    }
+
+    function syncLaunchpadOptionsByChain() {
+      if (!chainSelect || !launchpadSelect) return;
+
+      const chain = (chainSelect.value || "sol").toLowerCase();
+
+      const optPump = launchpadSelect.querySelector('option[value="pumpfun"]');
+      const optFour = launchpadSelect.querySelector('option[value="fourmeme"]');
+
+      if (optPump) optPump.disabled = chain !== "sol";
+      if (optFour) optFour.disabled = chain !== "bnb";
+
+      // If current selection becomes invalid, reset to none
+      const lp = (launchpadSelect.value || "none").toLowerCase();
+      if ((lp === "pumpfun" && chain !== "sol") || (lp === "fourmeme" && chain !== "bnb")) {
+        launchpadSelect.value = "none";
+      }
+    }
+
+    function syncGraduatedState() {
+      if (!launchpadSelect || !graduatedCheck) return;
+      const lp = (launchpadSelect.value || "none").toLowerCase();
+      const enabled = lp !== "none";
+      graduatedCheck.disabled = !enabled;
+      if (!enabled) graduatedCheck.checked = false;
+
+      if (lp === "none") {
+        setHint("Pick a launchpad only if you launched via a launchpad.", false);
+      } else if (lp === "pumpfun") {
+        setHint("pump.fun selected (Solana). Graduated can be enabled.", false);
+      } else if (lp === "fourmeme") {
+        setHint("four.meme selected (BNB). Graduated can be enabled.", false);
+      }
+
+    }
+
+    function validateChainLaunchpad() {
+      const chain = (chainSelect?.value || "sol").toLowerCase();
+      const lp = (launchpadSelect?.value || "none").toLowerCase();
+
+      if (lp === "pumpfun" && chain !== "sol") {
+        alert("pump.fun launchpad requires Solana chain.");
+        return false;
+      }
+      if (lp === "fourmeme" && chain !== "bnb") {
+        alert("four.meme launchpad requires BNB chain.");
+        return false;
+      }
+      if (graduatedCheck?.checked && lp === "none") {
+        alert("Graduated requires a launchpad selection.");
+        return false;
+      }
+      return true;
+    }
+
+    function openModal() { overlay.style.display = "flex"; }
+    function closeModal() { overlay.style.display = "none"; }
+
+    function resolvePointsFromTier() {
+      const tier = (form.querySelector('select[name="tier"]')?.value || "").toLowerCase();
+      return tier === "premium" ? 30 : 15;
+    }
+
+    function setEarnedPoints(points) {
+      const p = Number(points || 0);
+      const val = (Number.isFinite(p) && p > 0) ? p : resolvePointsFromTier();
+      if (pointsEl && pointsWrap) {
+        pointsEl.textContent = String(val);
+        pointsWrap.style.display = "block";
+      }
+    }
+
+    closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+
+    // init + bind
+    syncLaunchpadOptionsByChain();
+    syncGraduatedState();
+    chainSelect?.addEventListener("change", () => {
+      syncLaunchpadOptionsByChain();
+      syncGraduatedState();
+    });
+    launchpadSelect?.addEventListener("change", () => {
+      syncLaunchpadOptionsByChain();
+      syncGraduatedState();
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!validateChainLaunchpad()) return;
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn ? submitBtn.textContent : null;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Verifying...";
+      }
+
+      try {
+        const formData = new FormData(form);
+        const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]')?.value || "";
+
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: formData,
+          headers: { "X-CSRFToken": csrf },
+          credentials: "same-origin"
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.ok) {
+          setEarnedPoints(data.points_awarded);
+          openModal();
+        } else {
+          alert(data.error || "Submission failed. Please check your inputs and tx signature.");
+        }
+      } catch (err) {
+        alert("Network error. Please try again.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      }
+    });
+  })();
+</script>
+
+{% endblock %}

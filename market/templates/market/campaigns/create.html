@@ -1,0 +1,427 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<section class="mb-4">
+  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+      <div class="lhx-pill">Campaigns</div>
+      <h1 class="lhx-h1 mt-3 mb-2">Create Campaign</h1>
+      <p class="lhx-sub mb-0">
+        Configure fields, reward pool, and publish your campaign.
+      </p>
+    </div>
+    <a class="lhx-btn-outline" href="{% url 'campaign_list' %}">Back</a>
+  </div>
+</section>
+
+<div id="lhxModalOverlay" style="
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+">
+  <div id="lhxModal" class="lhx-card p-4" style="
+    width: 100%;
+    max-width: 520px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(10,14,13,.92);
+    box-shadow: 0 24px 80px rgba(0,0,0,.55);
+  ">
+    <div class="d-flex align-items-start justify-content-between gap-3">
+      <div>
+        <div class="lhx-title" id="lhxModalTitle" style="margin:0;">Notice</div>
+        <div class="lhx-muted small mt-1" id="lhxModalSubtitle">Something happened.</div>
+      </div>
+      <button type="button" id="lhxModalCloseX" class="lhx-btn-outline" style="padding:6px 10px;">✕</button>
+    </div>
+
+    <div class="lhx-divider my-3"></div>
+
+    <div id="lhxModalBody" class="lhx-muted" style="white-space: pre-wrap; line-height: 1.45;">
+      Message
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" id="lhxModalCloseBtn" class="lhx-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+{% if not request.session.wallet_address %}
+  <div class="lhx-card p-4">
+    <div class="alert alert-warning mb-0">Connect wallet to create a campaign.</div>
+  </div>
+{% else %}
+
+  <section>
+    <div class="lhx-card p-4">
+
+      <h2 class="lhx-h2 mb-2">Campaign Setup</h2>
+      <div class="lhx-muted small mb-3">
+        • Reward pool is funded in SOL<br>
+        • Platform fee: <b>{{ platform_fee_pct }}%</b> (included in funding amount)<br>
+        • Participants pay <b>{{ submit_fee_lhx }} LHX</b> per submission (spam protection)<br>
+        • Need help verifying submissions? Pay 2 SOL → Contact <b>@lhxluke</b>
+      </div>
+
+      <!-- ✅ Payment instructions -->
+      <div class="lhx-card p-3 mb-4" style="background: rgba(10,14,13,.55); border: 1px solid rgba(255,255,255,.06);">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+          <div>
+            <div class="lhx-title" style="margin:0;">Where to send SOL (Funding Wallet)</div>
+            <div class="lhx-muted small mt-1">
+              Send your campaign funding SOL to this wallet, then paste the transaction signature below.
+              <br>
+              Funding amount = <b>Pool SOL × (1 + {{ platform_fee_pct }}%)</b>
+            </div>
+          </div>
+          <button class="lhx-btn-outline" type="button" id="copyFeeWalletBtn">Copy</button>
+        </div>
+
+        <div class="mt-3">
+          <div class="lhx-muted small mb-1">Recipient (LinkHash Campaign Funding Wallet)</div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <code class="lhx-mono" id="feeWalletText" style="
+              display:inline-block;
+              padding:10px 12px;
+              border-radius:12px;
+              background: rgba(0,0,0,.35);
+              border: 1px solid rgba(80,255,180,0.16);
+              color: rgba(210,255,240,.95);
+              ">
+              {{ fee_wallet }}
+            </code>
+          </div>
+          <div class="lhx-muted small mt-2">
+            Tip: Send <b>one</b> SOL transfer that includes the platform fee (Pool × 1.05).
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <div class="lhx-muted small mb-1">Expected funding (auto-calculated)</div>
+              <input class="form-control lhx-mono" id="expectedFunding" readonly value="Enter pool SOL below">
+            </div>
+            <div class="col-md-6">
+              <div class="lhx-muted small mb-1">Platform fee ({{ platform_fee_pct }}%)</div>
+              <input class="form-control lhx-mono" id="expectedFee" readonly value="-">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form id="campaignCreateForm" method="post" action="{% url 'campaign_create' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">Title</label>
+          <input class="form-control" name="title" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Type</label>
+          <select class="form-select" name="campaign_type">
+            <option value="dex_promo">DEX project promotion</option>
+            <option value="general">General campaign</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" rows="3" name="description"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Duration</label>
+          <select class="form-select" name="duration_days" required>
+            <option value="7" selected>7 days</option>
+            <option value="14">14 days</option>
+            <option value="30">30 days</option>
+          </select>
+          <div class="lhx-muted small mt-1">
+            Campaign will automatically end after the selected duration.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Cover Image (optional)</label>
+          <input class="form-control" type="file" name="cover_image" accept="image/*">
+          <div class="lhx-muted small mt-1">
+            If empty, a default image will be used on the list page.
+          </div>
+        </div>
+
+        <div class="lhx-divider my-4"></div>
+
+        <h3 class="lhx-h2 mb-2" style="font-size:18px;">Reward Pool (SOL)</h3>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Total Pool (SOL)</label>
+            <input class="form-control lhx-mono" id="poolSolInput" name="pool_sol" placeholder="e.g. 10" required>
+            <div class="lhx-muted small mt-1">
+              Minimum pool: <b>0.05 SOL</b><br>
+              You will fund <b>Pool × (1 + {{ platform_fee_pct }}%)</b> to the wallet above.
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Per User Reward (SOL) (optional)</label>
+            <input class="form-control lhx-mono" name="reward_per_user_sol" placeholder="e.g. 0.05">
+          </div>
+        </div>
+
+        <div class="lhx-muted small mt-2">
+          If per-user reward is empty, you can distribute manually later (or split to top-N).
+        </div>
+
+        <div class="lhx-divider my-4"></div>
+
+        <h3 class="lhx-h2 mb-2" style="font-size:18px;">Fields</h3>
+        <div class="lhx-muted small mb-2">
+          Define what participants must submit. (ex: X username, TG username, wallet address, link, etc.)
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Field #1 Label</label>
+            <input class="form-control" name="field1_label" placeholder="e.g. X username" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Field #1 Key</label>
+            <input class="form-control lhx-mono" name="field1_key" placeholder="e.g. x_username" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label class="form-label">Field #2 Label (optional)</label>
+            <input class="form-control" name="field2_label" placeholder="e.g. Telegram username">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Field #2 Key (optional)</label>
+            <input class="form-control lhx-mono" name="field2_key" placeholder="e.g. tg_username">
+          </div>
+        </div>
+
+        <div class="mb-3 mt-3">
+          <label class="form-label">Allow Image Upload?</label>
+          <select class="form-select" name="allow_images">
+            <option value="1" selected>Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+
+        <div class="lhx-divider my-4"></div>
+
+        <h3 class="lhx-h2 mb-2" style="font-size:18px;">Payment Proof</h3>
+        <div class="lhx-muted small mb-2">
+          1) Send <b>Expected funding amount</b> SOL to the wallet above<br>
+          2) Paste the transaction signature here<br>
+          3) Click <b>Verify & Create</b>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Pool Funding Tx Signature (SOL)</label>
+          <input class="form-control lhx-mono" name="funding_tx_signature" placeholder="Paste Solana tx signature" required>
+        </div>
+
+        <button class="lhx-btn" id="createBtn" type="submit">Verify & Create</button>
+        <span class="lhx-muted small ms-2" id="createHint" style="display:none;">Verifying on Solana…</span>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    (function(){
+      // ========= Modal helpers =========
+      const overlay = document.getElementById("lhxModalOverlay");
+      const closeX = document.getElementById("lhxModalCloseX");
+      const closeBtn = document.getElementById("lhxModalCloseBtn");
+      const titleEl = document.getElementById("lhxModalTitle");
+      const subEl = document.getElementById("lhxModalSubtitle");
+      const bodyEl = document.getElementById("lhxModalBody");
+
+      function openModal({title="Notice", subtitle="", message=""}){
+        titleEl.textContent = title;
+        subEl.textContent = subtitle || "";
+        bodyEl.textContent = message || "";
+        overlay.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+      function closeModal(){
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+      }
+
+      if (closeX) closeX.addEventListener("click", closeModal);
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (overlay) {
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeModal();
+        });
+      }
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && overlay.style.display === "flex") closeModal();
+      });
+
+      // ========= Existing calc/copy logic =========
+      const poolInput = document.getElementById("poolSolInput");
+      const expectedFunding = document.getElementById("expectedFunding");
+      const expectedFee = document.getElementById("expectedFee");
+      const copyBtn = document.getElementById("copyFeeWalletBtn");
+      const feeWalletText = document.getElementById("feeWalletText");
+
+      const feePct = Number("{{ platform_fee_pct|default_if_none:5 }}");
+
+      function fmt(n){
+        if (!isFinite(n)) return "-";
+        return (Math.round(n * 100000) / 100000).toString();
+      }
+      function recalc(){
+        const v = (poolInput && poolInput.value) ? Number(poolInput.value) : NaN;
+        if (!isFinite(v) || v <= 0){
+          expectedFee.value = "-";
+          expectedFunding.value = "Enter pool SOL below";
+          return;
+        }
+        const fee = v * (feePct / 100);
+        const total = v + fee;
+        expectedFee.value = fmt(fee) + " SOL";
+        expectedFunding.value = fmt(total) + " SOL";
+      }
+
+      if (poolInput){
+        poolInput.addEventListener("input", recalc);
+        recalc();
+      }
+
+      if (copyBtn && feeWalletText){
+        copyBtn.addEventListener("click", async () => {
+          try{
+            const text = feeWalletText.textContent.trim();
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = "Copied";
+            setTimeout(()=> copyBtn.textContent = "Copy", 1200);
+          }catch(e){
+            openModal({
+              title: "Copy failed",
+              subtitle: "Please copy manually",
+              message: "Your browser blocked clipboard access."
+            });
+          }
+        });
+      }
+
+      // ========= ✅ Submit via fetch to prevent full-page JSON =========
+      const form = document.getElementById("campaignCreateForm");
+      const btn = document.getElementById("createBtn");
+      const hint = document.getElementById("createHint");
+
+      function setLoading(isLoading){
+        if (!btn) return;
+        btn.disabled = isLoading;
+        if (hint) hint.style.display = isLoading ? "inline" : "none";
+        btn.textContent = isLoading ? "Verifying..." : "Verify & Create";
+      }
+
+      async function safeReadJson(response){
+        const ct = (response.headers.get("content-type") || "").toLowerCase();
+        if (ct.includes("application/json")) {
+          return await response.json();
+        }
+        // sometimes backend sends JSON as text/plain
+        const text = await response.text();
+        try { return JSON.parse(text); } catch(e) { return null; }
+      }
+
+      if (form){
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          // basic guard
+          if (btn && btn.disabled) return;
+
+          setLoading(true);
+
+          try{
+            const url = form.getAttribute("action");
+            const fd = new FormData(form);
+
+            const res = await fetch(url, {
+              method: "POST",
+              body: fd,
+              credentials: "same-origin",
+              headers: {
+                "X-Requested-With": "XMLHttpRequest"
+              }
+            });
+
+            // If server redirects on success, follow it in browser
+            if (res.redirected) {
+              window.location.href = res.url;
+              return;
+            }
+
+            // Try parse JSON (your current backend likely returns {"ok":false,"error":"..."} etc)
+            const data = await safeReadJson(res);
+
+            if (data) {
+              const ok = (data.ok === true) || (data.success === true);
+              if (!ok) {
+                const msg = data.error || data.message || "Failed to create campaign.";
+                openModal({
+                  title: "Transaction verification failed",
+                  subtitle: "Please check your SOL payment and try again.",
+                  message: msg
+                });
+                setLoading(false);
+                return;
+              }
+
+              // success JSON: redirect if provided
+              const redirectUrl = data.redirect_url || data.url || data.next;
+              if (redirectUrl) {
+                window.location.href = redirectUrl;
+                return;
+              }
+
+              // fallback: go back to list
+              window.location.href = "{% url 'campaign_list' %}";
+              return;
+            }
+
+            // If not JSON, likely HTML (form errors). Show generic popup.
+            const html = await res.text();
+            openModal({
+              title: "Request returned HTML",
+              subtitle: "Backend did not return JSON.",
+              message: "If this was an error, update the view to return JSON for AJAX requests.\n\n(Temporary fallback: we will reload the page now.)"
+            });
+
+            // optional: replace page with returned html instead of reload
+            // document.open(); document.write(html); document.close();
+            // For now, reload to keep consistent.
+            setTimeout(() => { window.location.reload(); }, 800);
+
+          }catch(err){
+            openModal({
+              title: "Network error",
+              subtitle: "Could not reach server",
+              message: String(err)
+            });
+            setLoading(false);
+          }
+        });
+      }
+    })();
+  </script>
+
+{% endif %}
+
+{% endblock %}

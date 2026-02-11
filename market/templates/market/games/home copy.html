@@ -1,0 +1,159 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+
+<div class="text-center mb-5 pt-4">
+  <div class="lhx-pill mb-3">Provably Fair · On-Chain · Verified</div>
+  <h1 class="lhx-h1 lhx-game-font" style="font-size: 56px;">LinkHash <span class="lhx-accent">GAMES</span></h1>
+  <p class="lhx-sub mx-auto">
+    Fairness guaranteed by Solana block hashes. <br>
+    <span class="text-white-50">8% Protocol Fee on all pots. Winners take the rest.</span>
+  </p>
+</div>
+
+<!-- =============================================
+     LOTTERY SECTION
+     ============================================= -->
+<section class="mb-5">
+  <div class="d-flex align-items-end gap-3 mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+    <h2 class="lhx-h2 fs-2 lhx-game-font">🎰 SOLANA LOTTERY</h2>
+    <div class="pb-1 text-secondary small lhx-game-font text-uppercase">
+      Sequential Deck Reduction · No Duplicate Numbers
+    </div>
+  </div>
+
+  <!-- ONGOING CARDS -->
+  <div class="row g-4 mb-5">
+    {% for game in lottery_ongoing %}
+      <div class="col-lg-6 d-flex">
+        {% include "market/components/lottery_card.html" with game=game %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- PAST RESULTS -->
+  <div class="row g-4">
+    <div class="col-lg-6">
+      {% include "market/components/past_results.html" with title="🕒 Past Hourly Results" data=lottery_past_hourly show_nums=True %}
+    </div>
+    <div class="col-lg-6">
+       {% include "market/components/past_results.html" with title="🌞 Past Daily Results" header_color_class="text-warning" data=lottery_past_daily show_nums=True %}
+    </div>
+  </div>
+</section>
+
+<!-- =============================================
+     FOMO SECTION
+     ============================================= -->
+<section class="mb-5 mt-5 pt-4">
+  <div class="d-flex align-items-end gap-3 mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+    <h2 class="lhx-h2 fs-2 lhx-game-font">🚀 FOMO RACE</h2>
+    <div class="pb-1 text-secondary small lhx-game-font text-uppercase">
+      Last Bet Wins The Pot · Timer Resets on Every Bet
+    </div>
+  </div>
+
+  <!-- ONGOING CARDS -->
+  <div class="row g-4 mb-5">
+    {% for game in fomo_ongoing %}
+      <div class="col-lg-6 d-flex">
+         {% include "market/components/fomo_card.html" with game=game %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- PAST RESULTS -->
+  <div class="row g-4">
+    <div class="col-lg-6">
+      {% include "market/components/past_results.html" with title="♾️ Past No-Limit Results" header_color_class="text-danger" data=fomo_past_nolimit show_last_bet=True %}
+    </div>
+    <div class="col-lg-6">
+      {% include "market/components/past_results.html" with title="🛑 Past Limit Results" header_color_class="text-info" data=fomo_past_limit show_bets=True %}
+    </div>
+  </div>
+</section>
+
+{% include "market/components/game_hud.html" %}
+
+<!-- TIMER SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const timers = document.querySelectorAll('.js-timer');
+
+  function parseDuration(str) {
+    const p = (str || "").split(':').map(Number);
+    if (p.length === 3) return p[0]*3600 + p[1]*60 + p[2];
+    return 0;
+  }
+
+  function formatDuration(secs) {
+    if (secs < 0) return "00:00:00";
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return [h,m,s].map(v => v < 10 ? "0"+v : v).join(':');
+  }
+
+  function revealWinningNumbers(timerEl) {
+    const card = timerEl.closest('.js-lottery-card');
+    if (!card) return;
+
+    const picks = Number(card.dataset.picks || 3);
+    const winningRaw = (card.dataset.winning || "").trim();
+
+    const timerWrap = card.querySelector('.lhx-timer-wrap');
+    const resultWrap = card.querySelector('.lhx-result-wrap');
+    const ballsWrap = card.querySelector('.js-balls');
+    if (!timerWrap || !resultWrap || !ballsWrap) return;
+
+    // show/hide 3rd ball depending on picks
+    const thirdBall = ballsWrap.querySelector('.js-ball-3');
+    if (thirdBall) thirdBall.style.display = (picks === 3) ? '' : 'none';
+
+    // Parse "2-4" or "1-4-9" or "2,4" etc.
+    let nums = [];
+    if (winningRaw) {
+      nums = winningRaw.split(/[^0-9]+/).filter(Boolean).slice(0, picks);
+    }
+
+    // Fill balls
+    const ballEls = ballsWrap.querySelectorAll('.js-ball');
+    ballEls.forEach((b, idx) => {
+      if (idx >= picks) return;
+      b.textContent = nums[idx] || "?";
+      b.classList.add('lhx-ball-pop');
+    });
+
+    // Toggle UI
+    timerWrap.classList.add('d-none');
+    resultWrap.classList.remove('d-none');
+  }
+
+  timers.forEach(el => {
+    let timeLeft = parseDuration(el.dataset.time || "00:00:00");
+
+    // If already 0 at load, reveal immediately
+    if (timeLeft <= 0) {
+      el.innerText = "00:00:00";
+      revealWinningNumbers(el);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        el.innerText = "00:00:00";
+        revealWinningNumbers(el);
+        return;
+      }
+      el.innerText = formatDuration(timeLeft);
+    }, 1000);
+  });
+});
+</script>
+
+
+{% endblock %}

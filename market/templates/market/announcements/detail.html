@@ -1,0 +1,42 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<section class="mb-3">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <div class="lhx-pill">Announcement</div>
+      <h1 class="lhx-h1 mt-3 mb-2">{{ a.title }}</h1>
+      <div class="lhx-muted small" style="opacity:.85;">
+        {{ a.published_at|default:a.created_at|date:"Y-m-d H:i" }}
+        {% if a.pinned %} · <span class="lhx-badge lhx-badge-major">Pinned</span>{% endif %}
+      </div>
+    </div>
+    <a class="lhx-btn-sm lhx-btn-ghost" href="{% url 'announcement_list' %}">← Back</a>
+  </div>
+</section>
+
+<section class="mb-5">
+  <div class="lhx-card p-4" style="background: rgba(0,0,0,0.18); border-radius:16px;">
+    <div class="lhx-rt">
+      {{ a.content|safe }}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* CKEditor HTML 출력용 기본 스타일 */
+  .lhx-rt img { max-width: 100%; height: auto; border-radius: 14px; }
+  .lhx-rt a { color: rgba(120,255,200,0.95); text-decoration: underline; }
+  .lhx-rt p, .lhx-rt li { color: rgba(255,255,255,0.84); line-height: 1.75; }
+  .lhx-rt h1, .lhx-rt h2, .lhx-rt h3 { color: rgba(255,255,255,0.92); margin-top: 18px; }
+  .lhx-rt blockquote {
+    border-left: 3px solid rgba(80,255,180,0.35);
+    padding-left: 12px;
+    color: rgba(255,255,255,0.78);
+    opacity: .95;
+  }
+</style>
+
+{% endblock %}

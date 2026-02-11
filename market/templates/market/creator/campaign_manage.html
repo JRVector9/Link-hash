@@ -1,0 +1,417 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<section class="mb-4">
+  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+      <div class="lhx-pill">Creator</div>
+      <h1 class="lhx-h1 mt-3 mb-2">Manage Campaign</h1>
+      <p class="lhx-sub mb-0">{{ campaign.title }}</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="lhx-btn-outline" href="{% url 'creator_campaign_list' %}">Back</a>
+      <a class="lhx-btn-outline" href="{% url 'campaign_detail' campaign.id %}">Public Page</a>
+    </div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section class="mb-4">
+  <div class="lhx-card p-4">
+    <div class="d-flex flex-wrap justify-content-between gap-3">
+      <div class="lhx-muted small">
+        Type:
+        <span class="lhx-badge ms-2">{{ campaign.get_campaign_type_display }}</span>
+      </div>
+
+      <div class="lhx-muted small">
+        Submission Fee:
+        <span class="lhx-mono">{{ campaign.submission_fee_lhx|intcomma }} LHX</span>
+      </div>
+
+      <div class="lhx-muted small">
+        Pool:
+        <span class="lhx-mono">{% if campaign.pool_total_sol %}{{ campaign.pool_total_sol }} SOL{% else %}-{% endif %}</span>
+      </div>
+
+      <div class="lhx-muted small">
+        Reward:
+        <span class="lhx-mono">{% if campaign.reward_per_user_sol %}{{ campaign.reward_per_user_sol }} SOL / user{% else %}split{% endif %}</span>
+      </div>
+    </div>
+
+    <div class="mt-3 lhx-muted small" style="opacity:.9;">
+      You control verification. Mark submissions as approved/rejected. Afterwards request payout to LinkHash.
+    </div>
+  </div>
+</section>
+
+<!-- PAYOUT REQUEST (OPTION) -->
+<section class="mb-4">
+  <div class="lhx-card p-4">
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+      <div>
+        <h2 class="lhx-h2 mb-1">LinkHash Payout</h2>
+        <div class="lhx-muted small" style="opacity:.9;">
+          If you request payout, LinkHash will distribute rewards to the wallets you approved.
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <form method="post" action="{% url 'creator_request_payout' campaign.id %}">
+          {% csrf_token %}
+          <button class="lhx-btn" type="submit">Request Payout</button>
+        </form>
+      </div>
+    </div>
+
+    {% if last_req %}
+      <div class="mt-3 lhx-card p-3" style="background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.06); border-radius: 16px;">
+        <div class="lhx-muted small" style="opacity:.95;">
+          Latest request:
+          <span class="lhx-badge ms-2">{{ last_req.status }}</span>
+          <span class="ms-2">Recipients:</span> <span class="lhx-mono">{{ last_req.total_recipients|intcomma }}</span>
+          <span class="ms-2">Total:</span> <span class="lhx-mono">{{ last_req.total_amount_sol }} SOL</span>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- SUBMISSIONS -->
+<section>
+  <div class="lhx-card p-4" id="submissionsBlock">
+
+    <style>
+      /* ===============================
+         Submissions pagination (dashboard-like)
+         Scope: only inside #submissionsBlock
+         =============================== */
+      #submissionsBlock .lhx-pg-label { color: rgba(255,255,255,.60); }
+      #submissionsBlock .lhx-pg {
+        display:inline-flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      }
+      #submissionsBlock .lhx-pg-btn {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(0,0,0,0.28);
+        color: rgba(255,255,255,0.88);
+        text-decoration: none;
+        transition: transform .08s ease, background .12s ease, border-color .12s ease;
+        user-select:none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #submissionsBlock .lhx-pg-btn:hover {
+        background: rgba(0,0,0,0.40);
+        border-color: rgba(255,255,255,0.18);
+        transform: translateY(-1px);
+        color: rgba(255,255,255,0.95);
+      }
+      #submissionsBlock .lhx-pg-btn.is-active {
+        background: rgba(34,197,94,0.18);
+        border-color: rgba(34,197,94,0.35);
+        color: rgba(210,255,240,.95);
+        font-weight: 700;
+        pointer-events:none;
+        transform:none;
+      }
+      #submissionsBlock .lhx-pg-btn.is-disabled {
+        opacity:.45;
+        pointer-events:none;
+        transform:none;
+      }
+    </style>
+
+    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+      <div>
+        <h2 class="lhx-h2 mb-1">Submissions</h2>
+        <div class="lhx-muted small" style="opacity:.9;">
+          Click approve/reject to mark. For any questions message our staff telegram @lhxluke
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a class="lhx-btn-outline" href="{% url 'creator_campaign_manage' campaign.id %}">Refresh</a>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      {% if submissions and submissions.paginator.count > 0 %}
+        <div class="table-responsive">
+          <table class="table table-sm mb-0"
+                 style="background:#fff; border-radius:14px; overflow:hidden; color:#111;">
+            <thead style="background:#fff;">
+              <tr>
+                <th style="color:#111; font-weight:700;">Wallet</th>
+                <th style="color:#111; font-weight:700;">Status</th>
+                <th style="color:#111; font-weight:700;">Fields</th>
+                <th style="color:#111; font-weight:700;">Fee Tx</th>
+                <th style="color:#111; font-weight:700;">Time</th>
+                <th style="color:#111; font-weight:700; text-align:right;">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody style="background:#fff;">
+              {% for s in submissions %}
+                <tr style="border-top: 1px solid #ececec;"
+                    onmouseover="this.style.background='#f6f6f6'"
+                    onmouseout="this.style.background='#ffffff'">
+
+                  <td style="min-width: 220px; color:#111;">
+                    <div class="lhx-mono" style="word-break: break-all; color:#111;">
+                      {{ s.submitter_wallet }}
+                    </div>
+                    <div class="small" style="color:#555;">
+                      <a href="https://solscan.io/account/{{ s.submitter_wallet }}"
+                         target="_blank" rel="noopener"
+                         style="color:#0a7a55; text-decoration:underline;">
+                        Solscan ↗
+                      </a>
+                    </div>
+                  </td>
+
+                  <td style="min-width:120px; color:#111;">
+                    {% if s.status == "approved" %}
+                      <span class="lhx-badge" style="border-color: rgba(80,255,180,.35); color:#0b5; font-weight:700;">
+                        Approved
+                      </span>
+                    {% elif s.status == "rejected" %}
+                      <span class="lhx-badge" style="border-color: rgba(255,80,120,.35); color:#c21; font-weight:700;">
+                        Rejected
+                      </span>
+                    {% else %}
+                      <span class="lhx-badge" style="color:#333; font-weight:700;">Pending</span>
+                    {% endif %}
+
+                    {% if s.reviewer_note %}
+                      <div style="margin-top:6px; font-size:0.85rem; color:#111;">
+                        Note: {{ s.reviewer_note }}
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <td style="min-width: 360px; color:#111;">
+                    {% for v in s.values.all %}
+                      <div class="small" style="word-break: break-all; color:#444;">
+                        <b style="color:#111;">{{ v.field.label }}:</b> {{ v.value_text|default:"" }}
+                      </div>
+                    {% endfor %}
+
+                    {% if s.images.all %}
+                      <div class="small mt-2" style="color:#555;">Images:</div>
+                      <div class="d-flex gap-2 flex-wrap">
+                        {% for img in s.images.all %}
+                          <a href="{{ img.image.url }}" target="_blank" rel="noopener"
+                             class="lhx-btn-outline"
+                             style="padding:6px 10px; color:#0a7a55; border-color:#0a7a55;">
+                            View
+                          </a>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <td class="lhx-mono" style="min-width: 220px; word-break: break-all; color:#111;">
+                    {{ s.fee_tx_signature }}
+                    <div class="small mt-1" style="color:#555;">
+                      <a href="https://solscan.io/tx/{{ s.fee_tx_signature }}"
+                         target="_blank" rel="noopener"
+                         style="color:#0a7a55; text-decoration:underline;">
+                        Tx ↗
+                      </a>
+                    </div>
+                  </td>
+
+                  <td class="small" style="min-width: 140px; color:#333;">
+                    {{ s.created_at|date:"Y-m-d H:i" }}
+                  </td>
+
+                  <td style="min-width: 240px; text-align:right;">
+                    <div class="d-flex justify-content-end gap-2 flex-wrap">
+
+                      <!-- APPROVE -->
+                      <form method="post" action="{% url 'creator_mark_submission' campaign.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="submission_id" value="{{ s.id }}">
+                        <input type="hidden" name="action" value="approve">
+                        <input type="hidden" name="note" value="">
+                        <button type="submit"
+                                class="lhx-btn-sm"
+                                style="background:#0a7a55; color:#fff; border-color:#0a7a55; font-weight:600;">
+                          Approve
+                        </button>
+                      </form>
+
+                      <!-- REJECT -->
+                      <form method="post" action="{% url 'creator_mark_submission' campaign.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="submission_id" value="{{ s.id }}">
+                        <input type="hidden" name="action" value="reject">
+                        <input type="hidden" name="note" value="">
+                        <button type="submit"
+                                class="lhx-btn-outline"
+                                style="background:#fff; color:#c62828; border-color:#c62828; font-weight:600;">
+                          Reject
+                        </button>
+                      </form>
+
+                      <!-- RESET -->
+                      <form method="post" action="{% url 'creator_mark_submission' campaign.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="submission_id" value="{{ s.id }}">
+                        <input type="hidden" name="action" value="pending">
+                        <input type="hidden" name="note" value="">
+                        <button type="submit"
+                                class="lhx-btn-outline"
+                                style="background:#fff; color:#555; border-color:#999; font-weight:600;">
+                          Reset
+                        </button>
+                      </form>
+
+                    </div>
+
+                    <!-- NOTE -->
+                    <div class="mt-2">
+                      <form method="post" action="{% url 'creator_mark_submission' campaign.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="submission_id" value="{{ s.id }}">
+                        <input type="hidden" name="action" value="note">
+                        <div class="d-flex gap-2">
+                          <input class="form-control form-control-sm"
+                                 name="note"
+                                 value="{{ s.reviewer_note|default:'' }}"
+                                 placeholder="Optional note"
+                                 style="min-width:140px; background:#fff; color:#111; border:1px solid #ccc;">
+                          <button type="submit"
+                                  class="lhx-btn-sm"
+                                  style="background:#eee; color:#111; border-color:#bbb; font-weight:600;">
+                            Save note
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                  </td>
+
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+
+        <!-- ✅ Pagination (reload 없이) -->
+        <div class="mt-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="lhx-pg-label">
+            Page <b style="color:rgba(255,255,255,.85);">{{ submissions.number }}</b>
+            of <b style="color:rgba(255,255,255,.85);">{{ submissions.paginator.num_pages }}</b>
+            <span style="opacity:.75;">· Total {{ submissions.paginator.count|intcomma }}</span>
+          </div>
+
+          <div class="lhx-pg">
+            {% if submissions.has_previous %}
+              <a class="lhx-pg-btn" href="?sp={{ submissions.previous_page_number }}">← Prev</a>
+            {% else %}
+              <span class="lhx-pg-btn is-disabled">← Prev</span>
+            {% endif %}
+
+            {% for n in submissions.paginator.page_range %}
+              {% if n == submissions.number %}
+                <span class="lhx-pg-btn is-active">{{ n }}</span>
+              {% else %}
+                <a class="lhx-pg-btn" href="?sp={{ n }}">{{ n }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if submissions.has_next %}
+              <a class="lhx-pg-btn" href="?sp={{ submissions.next_page_number }}">Next →</a>
+            {% else %}
+              <span class="lhx-pg-btn is-disabled">Next →</span>
+            {% endif %}
+          </div>
+        </div>
+
+      {% else %}
+        <div class="lhx-muted mt-3" style="opacity:.9;">No submissions yet.</div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function(){
+  const blockId = "submissionsBlock";
+  let loading = false;
+
+  async function swap(url, push=true){
+    if (loading) return;
+    loading = true;
+
+    try{
+      const res = await fetch(url, {
+        credentials: "same-origin",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+
+      if (!res.ok) {
+        window.location.href = url;
+        return;
+      }
+
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const newBlock = doc.getElementById(blockId);
+      const curBlock = document.getElementById(blockId);
+
+      if (!newBlock || !curBlock) {
+        window.location.href = url;
+        return;
+      }
+
+      curBlock.replaceWith(newBlock);
+
+      if (push) history.pushState({ sp:true }, "", url);
+
+    } catch(e){
+      window.location.href = url;
+    } finally {
+      loading = false;
+    }
+  }
+
+  // ✅ Intercept only pagination links inside submissionsBlock (sp=)
+  document.addEventListener("click", function(e){
+    const a = e.target.closest("a");
+    if (!a) return;
+
+    const href = a.getAttribute("href") || "";
+    if (!href.includes("sp=")) return;
+
+    const block = document.getElementById(blockId);
+    if (!block || !block.contains(a)) return;
+
+    e.preventDefault();
+    swap(a.href, true);
+  });
+
+  // back/forward support
+  window.addEventListener("popstate", function(){
+    swap(window.location.href, false);
+  });
+})();
+</script>
+
+{% endblock %}

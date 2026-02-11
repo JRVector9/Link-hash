@@ -1,0 +1,232 @@
+{# templates/market/about_mobile.html #}
+{% extends "market/base_mobile.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="mb-3">
+  <div class="lhx-pill">About</div>
+  <h1 class="lhx-h1 mt-2 mb-1">What is LinkHash?</h1>
+  <p class="lhx-sub mb-0" style="font-size:13px;">
+    A Web3-native marketing & incubation platform for DEX projects — verified engagement, distribution support, and liquidity expansion.
+  </p>
+</section>
+
+
+<!-- TOKEN INFO -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+
+    <h2 class="lhx-h2 mb-1">Token Information</h2>
+    <div class="lhx-muted small mb-3" style="opacity:.8;">Official links & key resources.</div>
+
+    <!-- Contract Address -->
+    <div class="lhx-panel p-3 mb-3">
+      <div class="lhx-section-label mb-1" style="font-size:11px;">Contract Address (CA)</div>
+      <div class="lhx-mono" style="word-break:break-all; font-size:12px; line-height:1.5;">
+        9LrT8gAKJ5qUJA1wJoQRrVfapJGrNnU2ca5UYiJipump
+      </div>
+      <div class="d-flex gap-2 flex-wrap mt-2">
+        <a class="lhx-btn-sm" style="font-size:12px;"
+           href="https://solscan.io/token/9LrT8gAKJ5qUJA1wJoQRrVfapJGrNnU2ca5UYiJipump"
+           target="_blank" rel="noopener">
+          Solscan ↗
+        </a>
+        <a class="lhx-btn-sm" style="font-size:12px;"
+           href="https://pump.fun/coin/9LrT8gAKJ5qUJA1wJoQRrVfapJGrNnU2ca5UYiJipump"
+           target="_blank" rel="noopener">
+          pump.fun ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Official Links -->
+    <div class="lhx-panel p-3 mb-3">
+      <div class="lhx-section-label mb-2" style="font-size:11px;">Official Links</div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="lhx-btn-sm" style="font-size:12px;" href="https://link-hash.com" target="_blank" rel="noopener">Website</a>
+        <a class="lhx-btn-sm" style="font-size:12px;" href="https://x.com/linkhash11235" target="_blank" rel="noopener">X</a>
+        <a class="lhx-btn-sm" style="font-size:12px;" href="https://t.me/linkhashnews" target="_blank" rel="noopener">TG Channel</a>
+        <a class="lhx-btn-sm" style="font-size:12px;" href="https://t.me/projectlinkhash" target="_blank" rel="noopener">TG Group</a>
+        <a class="lhx-btn-sm" style="font-size:12px;" href="https://kick.com/linkhash" target="_blank" rel="noopener">Kick</a>
+        <a class="lhx-btn-sm" style="font-size:12px;" href="https://www.instagram.com/lhx11235/" target="_blank" rel="noopener">IG</a>
+      </div>
+
+      <div style="height:1px; background:rgba(255,255,255,0.06); margin:12px 0;"></div>
+
+      <div class="lhx-muted small" style="line-height:1.6; font-size:12px;">
+        Business inquiry: <a href="https://t.me/lhxluke">@lhxluke</a> · <a href="mailto:lukkiezzang@gmail.com">lukkiezzang@gmail.com</a>
+      </div>
+    </div>
+
+    <!-- Mascot -->
+    <div class="lhx-panel p-3 text-center">
+      <img src="{% static 'market/icons/linkhash_icon.jpg' %}"
+           alt="LinkHash Mascot"
+           class="lhx-mascot-img" style="width:80px; height:80px; border-radius:14px;">
+      <div class="mt-2 lhx-muted small">LinkHash Mascot</div>
+    </div>
+
+    <!-- DEXscreener link -->
+    <a class="lhx-btn-outline m-full-width mt-3" style="text-align:center; display:block; font-size:14px;"
+       href="https://dexscreener.com/solana/hrwp4wceu18jx54gjz6xs9zg3wrsmz5jycjfekv8cg44"
+       target="_blank" rel="noopener">
+      View on DEXscreener ↗
+    </a>
+
+  </div>
+</section>
+
+
+<!-- ORIGIN -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+    <h2 class="lhx-h2 mb-2">The Origin of LinkHash</h2>
+    <div class="lhx-muted" style="font-size:14px; line-height:1.65;">
+      LinkHash originally launched as a <strong>crypto reward-based task platform</strong> where users earned rewards by completing
+      simple and verifiable tasks. Inspired by how the Bitcoin network rewards miners for discovering valid hashes through computation, LinkHash was designed to mirror that concept in the online world.
+      <br><br>
+      This led to the name "LinkHash" — combining "Link" (connections, actions, engagement) and "Hash" (verification, proof, crypto-native rewards).
+    </div>
+
+    <details class="mt-3">
+      <summary class="lhx-muted small" style="cursor:pointer; opacity:.8;">Example tasks</summary>
+      <ul class="mt-2 lhx-muted" style="font-size:13px; line-height:1.6; padding-left:18px;">
+        <li>Following specific social media accounts</li>
+        <li>Posting themed content on their own feeds</li>
+        <li>Participating in surveys</li>
+        <li>Downloading apps and leaving reviews</li>
+      </ul>
+    </details>
+
+    <div class="lhx-muted mt-3" style="font-size:14px; line-height:1.65;">
+      Verified users received rewards in <strong>USDT and SOL</strong>.
+      From day one, LinkHash aimed to become a <strong>Web3-native reward-driven marketing platform</strong>.
+    </div>
+  </div>
+</section>
+
+
+<!-- EVOLUTION -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+    <h2 class="lhx-h2 mb-2">How LinkHash Has Evolved</h2>
+    <div class="lhx-muted small mb-3" style="opacity:.8;">
+      LinkHash now operates as a full-stack growth engine for DEX projects.
+    </div>
+
+    <div class="d-flex flex-column gap-2">
+
+      <div class="lhx-panel p-3">
+        <div class="fw-semibold mb-1" style="font-size:14px;">Promotion Support</div>
+        <div class="lhx-muted small" style="line-height:1.55;">
+          Projects receive support across LinkHash channels with social-driven amplification and distribution.
+        </div>
+      </div>
+
+      <div class="lhx-panel p-3">
+        <div class="fw-semibold mb-1" style="font-size:14px;">Market Making & Liquidity</div>
+        <div class="lhx-muted small" style="line-height:1.55;">
+          Liquidity expansion, post-launch volume growth, and graduation strategy support.
+        </div>
+      </div>
+
+      <div class="lhx-panel p-3">
+        <div class="fw-semibold mb-1" style="font-size:14px;">End-to-End Incubation</div>
+        <div class="lhx-muted small" style="line-height:1.55;">
+          pump.fun / four.meme launch setup, X & Telegram setup, and early narrative positioning.
+        </div>
+      </div>
+
+      <div class="lhx-panel p-3">
+        <div class="fw-semibold mb-1" style="font-size:14px;">A Growth Marketplace</div>
+        <div class="lhx-muted small" style="line-height:1.55;">
+          A permissionless marketplace where campaigns, incentives, and distribution can be launched and scaled.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- CAMPAIGNS EVOLUTION -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+    <h2 class="lhx-h2 mb-2">Campaign System Evolution</h2>
+    <div class="lhx-muted" style="font-size:14px; line-height:1.65;">
+      The campaign system is being redesigned so that participants can <strong>create campaigns autonomously</strong> by paying a small fee in
+      <strong>LHX or SOL</strong>. LinkHash ultimately serves as a permissionless campaign and advertising infrastructure for any project seeking verified engagement.
+    </div>
+  </div>
+</section>
+
+
+<!-- TOKENOMICS -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+    <h2 class="lhx-h2 mb-3">Tokenomics</h2>
+
+    <div class="d-flex flex-column gap-2">
+
+      <div class="lhx-panel p-3 d-flex align-items-center justify-content-between">
+        <span class="lhx-muted small">Private Investors</span>
+        <span class="fw-semibold">30%</span>
+      </div>
+
+      <div class="lhx-panel p-3 d-flex align-items-center justify-content-between">
+        <span class="lhx-muted small">LinkHash Foundation</span>
+        <span class="fw-semibold">10%</span>
+      </div>
+
+      <div class="lhx-panel p-3 d-flex align-items-center justify-content-between">
+        <span class="lhx-muted small">Airdrops / Rewards / Partnerships</span>
+        <span class="fw-semibold">8%</span>
+      </div>
+
+      <div class="lhx-panel p-3 d-flex align-items-center justify-content-between">
+        <span class="lhx-muted small">Publicly Traded</span>
+        <span class="fw-semibold">52%</span>
+      </div>
+
+      <div class="lhx-panel p-3 d-flex align-items-center justify-content-between" style="border-color:rgba(51,240,163,0.15);">
+        <span class="lhx-muted small" style="color:rgba(210,255,240,.85);">Total</span>
+        <span class="fw-semibold" style="color:var(--lhx-accent);">100%</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- TRADING -->
+<section class="mb-3">
+  <div class="lhx-card p-3">
+    <h2 class="lhx-h2 mb-2">Trading & Liquidity</h2>
+    <div class="lhx-muted" style="font-size:14px; line-height:1.65;">
+      LinkHash launched on <strong>pump.fun</strong>, graduated, and now trades actively on <strong>pump.swap</strong>.
+    </div>
+
+    <div class="d-flex flex-column gap-2 mt-3">
+      <a class="lhx-btn-sm m-full-width" style="text-align:center; display:block;"
+         href="https://pump.fun/coin/9LrT8gAKJ5qUJA1wJoQRrVfapJGrNnU2ca5UYiJipump"
+         target="_blank" rel="noopener">
+        Trade on pump.fun ↗
+      </a>
+      <a class="lhx-btn-sm m-full-width" style="text-align:center; display:block;"
+         href="https://dexscreener.com/solana/hrwp4wceu18jx54gjz6xs9zg3wrsmz5jycjfekv8cg44"
+         target="_blank" rel="noopener">
+        Trade on DEXscreener ↗
+      </a>
+      <a class="lhx-btn-sm m-full-width" style="text-align:center; display:block;"
+         href="https://www.mexc.com/dex/trade?pair_ca=HrWP4WCeu18jX54GJz6Xs9Zg3wRsMZ5JYCJFEKv8Cg44&chain_id=100000&token_ca=9LrT8gAKJ5qUJA1wJoQRrVfapJGrNnU2ca5UYiJipump&base_token_ca=So11111111111111111111111111111111111111112"
+         target="_blank" rel="noopener">
+        Trade on MEXC DEX+ ↗
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

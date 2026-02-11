@@ -1,0 +1,641 @@
+{# templates/market/prediction_plus.html #}
+{% extends "market/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="mb-4">
+  <div class="lhx-pill">Prediction+</div>
+  <h1 class="lhx-h1 mt-3 mb-2">Track the latest data.</h1>
+  <p class="lhx-sub mb-0">
+    Real-time macro & crypto indicators + hourly predictions powered by LinkHash.
+  </p>
+</section>
+
+<!-- TOP: TradingView widget -->
+<section class="mb-5">
+  <div class="lhx-card p-3 p-md-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+      <h2 class="lhx-h2 mb-0">Track the latest data</h2>
+      <div class="lhx-muted small" style="opacity:.85;">
+        Major crypto · dominance · commodities · indices · rates
+      </div>
+    </div>
+
+    <div style="height: 640px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+      <!-- TradingView Widget BEGIN -->
+      <div class="tradingview-widget-container" style="height:100%; width:100%;">
+        <div class="tradingview-widget-container__widget" style="height:100%; width:100%;"></div>
+        <div class="tradingview-widget-copyright">
+          <a href="https://www.tradingview.com/markets/" rel="noopener nofollow" target="_blank">
+            <span class="blue-text">World markets</span>
+          </a> by TradingView
+        </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+        {
+          "lineWidth": 2,
+          "lineType": 0,
+          "chartType": "candlesticks",
+          "fontColor": "rgb(106, 109, 120)",
+          "gridLineColor": "rgba(242, 242, 242, 0.06)",
+          "volumeUpColor": "rgba(34, 171, 148, 0.5)",
+          "volumeDownColor": "rgba(247, 82, 95, 0.5)",
+          "volumeUpColor": "rgba(34, 171, 148, 0.5)",
+          "volumeDownColor": "rgba(247, 82, 95, 0.5)",
+          "backgroundColor": "#0F0F0F",
+          "widgetFontColor": "#DBDBDB",
+          "upColor": "#22ab94",
+          "downColor": "#f7525f",
+          "borderUpColor": "#22ab94",
+          "borderDownColor": "#f7525f",
+          "wickUpColor": "#22ab94",
+          "wickDownColor": "#f7525f",
+          "colorTheme": "dark",
+          "isTransparent": false,
+          "locale": "en",
+          "chartOnly": false,
+          "scalePosition": "right",
+          "scaleMode": "Normal",
+          "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
+          "valuesTracking": "1",
+          "changeMode": "price-and-percent",
+          "symbols": [
+            ["BINANCE:BTCUSDT|1D"],
+            ["BINANCE:ETHUSDT|1D"],
+            ["BINANCE:SOLUSDT|1D"],
+            ["BINANCE:XRPUSDT|1D"],
+            ["BINANCE:BNBUSDT|1D"],
+            ["BINANCE:DOGEUSDT|1D"],
+            ["CRYPTOCAP:BTC.D|1D"],
+            ["CRYPTOCAP:ETH.D|1D"],
+            ["CRYPTOCAP:USDT.D|1D"],
+            ["CRYPTOCAP:TOTAL3|1D"],
+            ["CRYPTOCAP:TOTAL2|1D"],
+            ["OANDA:XAUUSD|1D"],
+            ["CAPITALCOM:SILVER|1D"],
+            ["PEPPERSTONE:USDX|1D"],
+            ["THINKMARKETS:NAS100|ALL"],
+            ["TVC:SPX|1D"],
+            ["CBOEFTSE:RUT|1D"],
+            ["BBG:BCOM|1D"],
+            ["SP:SPGSCI|1D"],
+            ["NASDAQ:SOX|1D"],
+            ["NASDAQ:AIQ|1D"],
+            ["FRED:FEDFUNDS|1D"],
+            ["FRED:M1SL|1D"],
+            ["FRED:M2SL|1D"],
+            ["FRED:SOFR|1D"],
+            ["FRED:RRPONTSYD|1D"]
+          ],
+          "dateRanges": ["1d|5","5d|5","1w|60","1m|1D","3m|1D","6m|1D","12m|1D","60m|1W","all|1M"],
+          "fontSize": "10",
+          "headerFontSize": "medium",
+          "autosize": true,
+          "width": "100%",
+          "height": "100%",
+          "noTimeScale": false,
+          "hideDateRanges": false,
+          "showMA": true,
+          "maLength": 9,
+          "maLineColor": "rgba(76, 175, 80, 1)",
+          "maLineWidth": 1,
+          "hideMarketStatus": false,
+          "hideSymbolLogo": false
+        }
+        </script>
+      </div>
+      <!-- TradingView Widget END -->
+    </div>
+  </div>
+</section>
+
+<!-- Coinness -->
+<section class="mb-5">
+  <div class="lhx-card p-3 p-md-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <!-- Left -->
+      <div>
+        <div class="lhx-muted small" style="opacity:.85;">
+          Get the latest crypto news feed from
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- ✅ Coinness logo -->
+          <img
+            src="{% static 'market/icons/coinness.png' %}"
+            alt="Coinness"
+            style="
+              height:20px;
+              width:auto;
+              object-fit:contain;
+              opacity:.95;
+            "
+          >
+
+          <!-- Text -->
+          <div class="fw-semibold" style="font-size: 18px;">
+            Coinness Global - Fast and accurate crypto news at your fingertips
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <a class="lhx-btn-sm lhx-btn-ghost"
+         href="https://coinness.com/en/"
+         target="_blank" rel="noopener">
+        Open Coinness ↗
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- Hourly Predictions -->
+<section class="mb-4" id="hourly-predictions">
+  <div class="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <h2 class="lhx-h2 mb-1">Hourly Crypto Predictions</h2>
+      <div class="lhx-muted small" style="opacity:.85;">
+        Updates every hour on the hour · BTC / ETH / SOL
+      </div>
+    </div>
+
+    <div class="lhx-card px-3 py-2" style="background: rgba(0,0,0,0.18); border-radius: 14px;">
+      <div class="lhx-muted small" style="opacity:.8;">Next update in</div>
+      <div class="lhx-mono" id="nextUpdateTimer" style="font-size: 16px;">--:--</div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- BTC -->
+    <div class="col-lg-4">
+      <div class="lhx-card p-3 h-100">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-semibold" style="font-size: 16px;">Bitcoin (BTC)</div>
+          <span class="lhx-badge" id="badgeBTC">Loading</span>
+        </div>
+        <div class="lhx-muted small mb-2" id="asofBTC" style="opacity:.75;">As of: -</div>
+        <div class="lhx-muted small" id="reasonBTC" style="line-height:1.7;">Fetching prediction...</div>
+      </div>
+    </div>
+
+    <!-- ETH -->
+    <div class="col-lg-4">
+      <div class="lhx-card p-3 h-100">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-semibold" style="font-size: 16px;">Ethereum (ETH)</div>
+          <span class="lhx-badge" id="badgeETH">Loading</span>
+        </div>
+        <div class="lhx-muted small mb-2" id="asofETH" style="opacity:.75;">As of: -</div>
+        <div class="lhx-muted small" id="reasonETH" style="line-height:1.7;">Fetching prediction...</div>
+      </div>
+    </div>
+
+    <!-- SOL -->
+    <div class="col-lg-4">
+      <div class="lhx-card p-3 h-100">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-semibold" style="font-size: 16px;">Solana (SOL)</div>
+          <span class="lhx-badge" id="badgeSOL">Loading</span>
+        </div>
+        <div class="lhx-muted small mb-2" id="asofSOL" style="opacity:.75;">As of: -</div>
+        <div class="lhx-muted small" id="reasonSOL" style="line-height:1.7;">Fetching prediction...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lhx-muted small mt-3" id="predErrors" style="opacity:.75; display:none;"></div>
+</section>
+
+<!-- Polymarket CTA -->
+<section class="mb-5">
+  <div class="lhx-card p-3 p-md-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <!-- Left -->
+      <div>
+        <div class="lhx-muted small" style="opacity:.85;">
+          Bet your hourly crypto prediction on
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- ✅ Polymarket logo -->
+          <img
+            src="{% static 'market/icons/polymarket.png' %}"
+            alt="Polymarket"
+            style="
+              height:20px;
+              width:auto;
+              object-fit:contain;
+              opacity:.95;
+            "
+          >
+
+          <!-- Text -->
+          <div class="fw-semibold" style="font-size:18px;">
+            Polymarket - 15 Min, Hourly, 4 Hour, Daily bets also available
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <a class="lhx-btn-sm lhx-btn-ghost"
+         href="https://polymarket.com/crypto/hourly"
+         target="_blank" rel="noopener">
+        Go to Polymarket ↗
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- LinkHash Market Study -->
+<section class="mb-5" id="market-study-section">
+  <div class="lhx-card p-3 p-md-4">
+
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+      <div>
+        <div class="lhx-muted small" style="opacity:.85;">LinkHash Research Board</div>
+        <div class="fw-semibold" style="font-size: 18px;">LinkHash Market Study</div>
+      </div>
+
+      <div class="lhx-muted small" style="opacity:.75;">
+        First post is free · Subscription required for the rest
+      </div>
+    </div>
+
+    <div class="lhx-divider my-3"></div>
+
+    <div class="d-flex flex-column gap-2">
+      {% for post in market_study_posts %}
+        {% if forloop.first or post.is_free %}
+          <!-- ✅ Free -->
+          <a href="{% url 'market_study_detail' post.slug %}"
+             class="lhx-card p-3"
+             style="text-decoration:none; background: rgba(0,0,0,0.18); border-radius:14px;">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <div>
+                <div class="fw-semibold">{{ post.title }}</div>
+                {% if post.excerpt %}
+                  <div class="lhx-muted small mt-1" style="opacity:.8;">{{ post.excerpt }}</div>
+                {% endif %}
+              </div>
+              <!-- <span class="lhx-badge">Free</span>-->
+            </div>
+          </a>
+        {% else %}
+          <!-- 🔒 Paid -->
+          <button type="button"
+                  class="lhx-card p-3 text-start js-locked-post"
+                  data-slug="{{ post.slug }}"
+                  style="background: rgba(0,0,0,0.18); border-radius:14px; border:1px solid rgba(255,255,255,0.08);">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <div>
+                <div class="fw-semibold">{{ post.title }}</div>
+                {% if post.excerpt %}
+                  <div class="lhx-muted small mt-1" style="opacity:.8;">{{ post.excerpt }}</div>
+                {% endif %}
+              </div>
+              <span class="lhx-badge lhx-badge-major">Locked</span>
+            </div>
+          </button>
+        {% endif %}
+      {% empty %}
+        <div class="lhx-muted small" style="opacity:.8;">No posts yet.</div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<!-- ✅ Market Study Subscription Modal -->
+<div id="msPayModal" class="lhx-modal-overlay" style="display:none;">
+  <div class="lhx-modal">
+
+    <div class="lhx-modal-title">Subscribe to LinkHash Market Study</div>
+
+    <div class="lhx-muted small" style="opacity:.85; line-height:1.6;">
+      Unlock all paid posts with a 30-day subscription.<br>
+      Pay <strong>0.3 SOL</strong> or <strong>10,000 LHX</strong>, then submit your transaction signature.
+    </div>
+
+    <div class="lhx-divider my-3"></div>
+
+    <!-- Payment choice -->
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="lhx-btn-sm js-ms-asset" data-asset="sol">Pay 0.3 SOL</button>
+      <button type="button" class="lhx-btn-sm lhx-btn-ghost js-ms-asset" data-asset="lhx">Pay 10,000 LHX</button>
+    </div>
+
+    <!-- Destination wallet + copy -->
+    <div class="mt-3 lhx-panel p-3" style="border-radius:16px;">
+      <div class="d-flex align-items-center justify-content-between gap-2">
+        <div class="fw-semibold">Destination (Dev Wallet)</div>
+        <button type="button" id="msCopyDevWallet" class="lhx-btn-sm lhx-btn-ghost">Copy</button>
+      </div>
+
+      <div class="lhx-mono mt-2" id="msDevWallet" style="word-break:break-all; opacity:.95;">
+        {{ DEV_WALLET|default:"GkWMcnSNQP4aTVZruJMSwjhzW3VvEza3iZXi3NEwzPKE" }}
+      </div>
+
+      <div class="lhx-muted small mt-2" style="opacity:.75;">
+        After sending, copy the <strong>tx signature</strong> and paste below.
+      </div>
+
+      <div class="lhx-muted small mt-2" style="opacity:.75;">
+        Tip: open explorer → copy Signature / Tx Hash
+        <span id="msExplorerHint" class="lhx-mono">Solscan</span>
+      </div>
+    </div>
+
+    <!-- Submit tx -->
+    <form id="msSubscribeForm" class="mt-3">
+      {% csrf_token %}
+      <input type="hidden" name="asset" id="msAssetInput" value="sol">
+
+      <label class="lhx-muted small mb-1 d-block">Transaction Signature</label>
+      <input name="tx_signature" class="form-control" placeholder="Paste tx signature here" required>
+
+      <div class="lhx-muted small mt-2" id="msResultLine" style="display:none; opacity:.9;"></div>
+      <br>
+      <div class="lhx-modal-actions">
+        <button type="button" id="msPayModalClose" class="lhx-btn-sm lhx-btn-ghost">Cancel</button>
+        <button type="submit" class="lhx-btn">Submit & Verify</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<style>
+  /* verdict badges */
+  .lhx-badge-up {
+    background: rgba(34, 171, 148, 0.14);
+    border: 1px solid rgba(34, 171, 148, 0.35);
+    color: rgba(210,255,235,0.98);
+  }
+  .lhx-badge-down {
+    background: rgba(247, 82, 95, 0.12);
+    border: 1px solid rgba(247, 82, 95, 0.32);
+    color: rgba(255,220,223,0.98);
+  }
+</style>
+
+<script>
+(function () {
+  const API_URL = "{% url 'api_hourly_predictions' %}";
+
+  const badgeMap = {
+    BTC: document.getElementById("badgeBTC"),
+    ETH: document.getElementById("badgeETH"),
+    SOL: document.getElementById("badgeSOL"),
+  };
+  const asofMap = {
+    BTC: document.getElementById("asofBTC"),
+    ETH: document.getElementById("asofETH"),
+    SOL: document.getElementById("asofSOL"),
+  };
+  const reasonMap = {
+    BTC: document.getElementById("reasonBTC"),
+    ETH: document.getElementById("reasonETH"),
+    SOL: document.getElementById("reasonSOL"),
+  };
+
+  const timerEl = document.getElementById("nextUpdateTimer");
+  const errEl = document.getElementById("predErrors");
+
+  let nextUpdateMs = null;
+  let tickHandle = null;
+
+  function setBadge(asset, verdict) {
+    const el = badgeMap[asset];
+    if (!el) return;
+
+    el.classList.remove("lhx-badge-up", "lhx-badge-down");
+
+    if (verdict === "up") {
+      el.textContent = "UP";
+      el.classList.add("lhx-badge-up");
+    } else if (verdict === "down") {
+      el.textContent = "DOWN";
+      el.classList.add("lhx-badge-down");
+    } else {
+      el.textContent = "—";
+    }
+  }
+
+  function fmtCountdown(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  }
+
+  function startTimer() {
+    if (tickHandle) clearInterval(tickHandle);
+    tickHandle = setInterval(() => {
+      if (!nextUpdateMs) {
+        timerEl.textContent = "--:--";
+        return;
+      }
+      const now = Date.now();
+      const left = nextUpdateMs - now;
+      timerEl.textContent = fmtCountdown(left);
+
+      if (left <= 0) {
+        fetchPredictions();
+      }
+    }, 1000);
+  }
+
+  function renderErrors(errors) {
+    if (!errors || Object.keys(errors).length === 0) {
+      errEl.style.display = "none";
+      errEl.textContent = "";
+      return;
+    }
+    errEl.style.display = "block";
+    errEl.innerHTML = `
+      <div class="lhx-mono">Some assets failed to update:</div>
+      <ul style="margin:6px 0 0 18px;">
+        ${Object.entries(errors).map(([k,v]) => `<li><span class="lhx-mono">${k}</span> — ${String(v)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  async function fetchPredictions() {
+    try {
+      const res = await fetch(API_URL, { method: "GET", credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Failed to fetch predictions.");
+      }
+
+      const nextIso = data.next_update_utc;
+      nextUpdateMs = nextIso ? Date.parse(nextIso) : null;
+      startTimer();
+
+      const asOfIso = data.as_of_utc ? new Date(data.as_of_utc) : null;
+
+      const pred = data.data || {};
+      ["BTC","ETH","SOL"].forEach(a => {
+        const p = pred[a];
+        if (!p) {
+          setBadge(a, null);
+          if (reasonMap[a]) reasonMap[a].textContent = "No data.";
+          if (asofMap[a]) asofMap[a].textContent = "As of: -";
+          return;
+        }
+        setBadge(a, p.verdict);
+        if (reasonMap[a]) reasonMap[a].textContent = p.reasoning || "-";
+        if (asofMap[a]) {
+          asofMap[a].textContent = asOfIso
+            ? `As of: ${asOfIso.toLocaleString()}`
+            : "As of: -";
+        }
+      });
+
+      renderErrors(data.errors);
+
+    } catch (e) {
+      errEl.style.display = "block";
+      errEl.textContent = `Failed to load predictions. ${String(e.message || e)}`;
+      nextUpdateMs = Date.now() + 30 * 1000;
+      startTimer();
+    }
+  }
+
+  fetchPredictions();
+})();
+</script>
+
+<script>
+(function () {
+  const modal = document.getElementById("msPayModal");
+  const closeBtn = document.getElementById("msPayModalClose");
+  const copyBtn = document.getElementById("msCopyDevWallet");
+  const devWalletEl = document.getElementById("msDevWallet");
+  const form = document.getElementById("msSubscribeForm");
+  const assetInput = document.getElementById("msAssetInput");
+  const resultLine = document.getElementById("msResultLine");
+  const explorerHint = document.getElementById("msExplorerHint");
+
+  const lockedBtns = document.querySelectorAll(".js-locked-post");
+  const assetBtns = document.querySelectorAll(".js-ms-asset");
+
+  if (!modal) return;
+
+  function openModal() {
+    modal.style.display = "flex";
+    if (resultLine) {
+      resultLine.style.display = "none";
+      resultLine.textContent = "";
+    }
+  }
+  function closeModal() {
+    modal.style.display = "none";
+  }
+
+  closeBtn?.addEventListener("click", closeModal);
+  // modal.addEventListener("click", (e) => {
+  //  if (e.target === modal) closeModal();
+  // });
+
+  lockedBtns.forEach((btn) => {
+    btn.addEventListener("click", () => openModal());
+  });
+
+  function setAsset(asset) {
+    const a = (asset || "sol").toLowerCase();
+    if (assetInput) assetInput.value = a;
+
+    // reset styles
+    assetBtns.forEach(b => {
+      b.classList.add("lhx-btn-sm");
+      b.classList.add("lhx-btn-ghost");
+    });
+
+    const active = document.querySelector(`.js-ms-asset[data-asset="${a}"]`);
+    if (active) active.classList.remove("lhx-btn-ghost");
+
+    if (explorerHint) explorerHint.textContent = "Solscan";
+  }
+
+  assetBtns.forEach((b) => {
+    b.addEventListener("click", () => setAsset(b.dataset.asset));
+  });
+
+  // init default
+  setAsset("sol");
+
+  // ✅ URL param auto-open: /prediction-plus/?ms_subscribe=1#market-study-section
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("ms_subscribe") === "1") {
+      openModal();
+    }
+  } catch (e) {}
+
+  copyBtn?.addEventListener("click", async () => {
+    const text = (devWalletEl?.textContent || "").trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = "Copied!";
+      setTimeout(() => (copyBtn.textContent = "Copy"), 900);
+    } catch (e) {
+      alert("Copy failed. Please copy manually.");
+    }
+  });
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : null;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Verifying...";
+    }
+
+    try {
+      const formData = new FormData(form);
+      const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]')?.value || "";
+
+      const res = await fetch("{% url 'api_market_study_subscribe' %}", {
+        method: "POST",
+        body: formData,
+        headers: { "X-CSRFToken": csrf },
+        credentials: "same-origin",
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        if (resultLine) {
+          resultLine.style.display = "block";
+          resultLine.innerHTML = `
+            ✅ Your subscription will last for <strong>30 days</strong>, until
+            <span class="lhx-mono">${data.expires_at_utc || ""}</span>
+          `;
+        }
+      } else {
+        alert(data.error || "Subscription failed. Please check tx signature.");
+      }
+    } catch (err) {
+      alert("Network error. Please try again.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+  });
+})();
+</script>
+
+{% endblock %}

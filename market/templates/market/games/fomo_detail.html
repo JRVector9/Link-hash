@@ -1,0 +1,166 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+<div class="row">
+  <div class="col-12 mb-3">
+    <a href="{% url 'games_home' %}" class="lhx-link-muted">← Back to Games</a>
+  </div>
+
+  <!-- Chart & Game State -->
+  <div class="col-lg-8">
+    <!-- Chart Container -->
+    <div class="lhx-chart-wrap mb-4">
+      <div id="tv-chart-container"></div>
+      <div class="position-absolute top-0 start-0 p-3">
+        <div class="lhx-badge lhx-badge-major">FOMO {{ game.limit_mode }}</div>
+        <div class="lhx-h2 mt-1">{{ game.name }}</div>
+      </div>
+    </div>
+
+    <!-- Live Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="lhx-card p-3 d-flex align-items-center justify-content-between border-danger">
+          <div>
+            <div class="small lhx-muted">CRASH TIMER</div>
+            <div class="small text-secondary">Resets to 10:00 on bet</div>
+          </div>
+          <div class="fs-1 lhx-game-timer urgent">{{ game.timer }}</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="lhx-card p-3 d-flex align-items-center justify-content-between border-warning">
+          <div>
+            <div class="small lhx-muted">CURRENT POT</div>
+            <div class="small text-secondary">Winner takes all</div>
+          </div>
+          <div class="fs-1 fw-bold text-warning">{{ game.pot }} SOL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="lhx-card p-4">
+      <h5 class="lhx-title mb-3">Live Bets</h5>
+      <table class="table table-dark table-hover small mb-0">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Player</th>
+            <th class="text-end">Bet Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in game.history %}
+          <tr>
+            <td class="text-secondary">{{ h.time }}</td>
+            <td class="lhx-mono" title="{{ h.user }}">
+              {{ h.user|slice:":4" }}...{{ h.user|slice:"-4:" }}
+            </td>
+
+            <td class="text-end fw-bold text-success">+{{ h.amt }} SOL</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Betting Panel -->
+  <div class="col-lg-4">
+    <div class="lhx-card p-4 position-sticky" style="top: 100px;">
+      <div class="lhx-last-winner text-center">
+        <div class="small text-uppercase fw-bold text-warning mb-1">Current King 👑</div>
+        <div class="lhx-mono fs-5" title="{{ game.last_bidder }}">
+          {% if game.last_bidder == "Unknown" %}
+            Unknown
+          {% else %}
+            {{ game.last_bidder|slice:":4" }}...{{ game.last_bidder|slice:"-4:" }}
+          {% endif %}
+        </div>
+
+
+      </div>
+
+      <form method="POST" class="mt-4">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="small text-secondary">Game Wallet</label>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ game.wallet }}" readonly>
+            <button class="btn btn-outline-secondary" type="button">Copy</button>
+          </div>
+        </div>
+
+        <hr class="border-secondary opacity-25">
+
+        <div class="mb-3">
+          <label class="form-label lhx-title">Bet Amount (SOL)</label>
+          {% if game.limit_mode == 'No-Limit' %}
+             <input type="number" step="0.1" name="amount" class="form-control form-control-lg bg-dark text-white border-success" 
+                    placeholder="Min {{ game.min_bet }}">
+             <div class="form-text text-success">Must be higher than previous bet!</div>
+          {% else %}
+             <input type="text" class="form-control form-control-lg bg-dark text-white border-secondary" 
+                    value="Fixed 0.5 SOL" disabled>
+             <input type="hidden" name="amount" value="0.5">
+          {% endif %}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small">TX Signature</label>
+          <input type="text" name="tx_signature" class="form-control bg-dark text-white border-secondary" 
+                 placeholder="Paste TX ID here..." required>
+        </div>
+
+        {% if not wallet_address %}
+          <button type="button" class="lhx-btn w-100 opacity-50" disabled>Connect Wallet</button>
+        {% else %}
+          <button type="submit" class="lhx-btn w-100 py-3 fs-5">🚀 FOMO IN</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const chartContainer = document.getElementById('tv-chart-container');
+    const chart = LightweightCharts.createChart(chartContainer, {
+      layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#e9f3ef' },
+      grid: { vertLines: { color: 'rgba(255, 255, 255, 0.05)' }, horzLines: { color: 'rgba(255, 255, 255, 0.05)' } },
+      width: chartContainer.clientWidth,
+      height: 400,
+      timeScale: { timeVisible: true, secondsVisible: true },
+    });
+
+    const candleSeries = chart.addCandlestickSeries({
+      upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+    });
+
+    // Dummy Data to look like a "Pump"
+    const data = [];
+    let time = Math.floor(Date.now() / 1000) - 3600;
+    let price = 100;
+    for(let i=0; i<60; i++) {
+      let open = price;
+      let close = price + (Math.random() - 0.4) * 5; // Slight uptrend
+      let high = Math.max(open, close) + Math.random() * 2;
+      let low = Math.min(open, close) - Math.random() * 2;
+      data.push({ time: time + i*60, open, high, low, close });
+      price = close;
+    }
+    candleSeries.setData(data);
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      chart.applyOptions({ width: chartContainer.clientWidth });
+    });
+  });
+</script>
+{% endblock %}

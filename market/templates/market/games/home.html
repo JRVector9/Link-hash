@@ -1,0 +1,1144 @@
+{% extends "market/base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+<div class="text-center mb-5 pt-4">
+    <div class="lhx-pill mb-3">Provably Fair · On-Chain · Verified</div>
+    <h1 class="lhx-h1 lhx-game-font" style="font-size: 56px;">
+        LinkHash
+        <span class="lhx-accent">GAMES</span>
+    </h1>
+    <p class="lhx-sub mx-auto">
+        Fairness guaranteed by Solana block hashes.
+        <br>
+        <span class="text-white-50">8% Protocol Fee on all pots. Winners take the rest.</span>
+    </p>
+</div>
+<!-- =============================================
+     LOTTERY SECTION
+     ============================================= -->
+<!-- =============================================
+     FOMO SECTION
+     ============================================= -->
+<section class="mb-5 mt-5 pt-4">
+    <div class="d-flex align-items-end gap-3 mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+        <h2 class="lhx-h2 fs-2 lhx-game-font">🚀 FOMO RACE</h2>
+        <div class="pb-1 text-secondary small lhx-game-font text-uppercase">
+            Last Bet Wins The Pot · Timer Resets on Every Bet
+        </div>
+    </div>
+    <!-- ONGOING CARDS -->
+    <div class="row g-4 mb-5">
+        {% for game in fomo_ongoing %}
+        <div class="col-lg-6 d-flex">
+            {% include "market/components/fomo_card.html" with game=game %}
+        </div>
+        {% endfor %}
+    </div>
+    <!-- PAST RESULTS (per-game, aligned) -->
+    <div class="row g-4">
+      {% for game in fomo_ongoing %}
+        <div class="col-lg-6">
+          {% if game.limit_mode %}
+            {% include "market/components/past_results.html" with title="🛑 Past Limit Results" data=game.past_rows show_bets=True game_id=game.id %}
+          {% else %}
+            {% include "market/components/past_results.html" with title="♾️ Past No-Limit Results" data=game.past_rows show_last_bet=True game_id=game.id %}
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+
+</section>
+{% include "market/components/game_hud.html" %}
+<!-- =========================
+     SOLANA WALLET (GAMES) SETUP
+     ========================= -->
+<div class="lhx-card p-4 mb-4" style="background: rgba(255,255,255,0.02); border-radius: 18px;">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <div class="lhx-pill lhx-game-font mb-2">Games · Sender Verification</div>
+      <div class="lhx-h2 lhx-game-font mb-1" style="font-size: 22px;">Solana Wallet for Bets</div>
+      <div class="lhx-muted small">
+        Your login wallet can be non-Solana. To bet, register the Solana wallet you will send SOL from.
+      </div>
+    </div>
+    <div class="text-end">
+      {% if wallet_address %}
+        {% if has_solana_wallet %}
+          <div class="lhx-badge" style="background: rgba(51,240,163,0.12); color: rgba(51,240,163,0.95); border: 1px solid rgba(51,240,163,0.25);">Registered</div>
+        {% else %}
+          <div class="lhx-badge" style="background: rgba(255,87,87,0.12); color: rgba(255,87,87,0.95); border: 1px solid rgba(255,87,87,0.25);">Required</div>
+        {% endif %}
+      {% else %}
+        <div class="lhx-badge" style="background: rgba(255,255,255,0.08); color: rgba(233,243,239,0.75); border: 1px solid rgba(255,255,255,0.10);">Login Required</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="lhx-divider my-3"></div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="lhx-mono text-white" style="font-size: 14px;">
+      Primary:
+      <span id="uiPrimarySolWallet" class="text-warning">
+        {% if primary_solana_wallet %}{{ primary_solana_wallet }}{% else %}—{% endif %}
+      </span>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+        id="openSolWalletModalBtn"
+        {% if not wallet_address %}disabled{% endif %}
+      >
+        {% if has_solana_wallet %}Update{% else %}Register{% endif %} Solana Wallet
+      </button>
+    </div>
+  </div>
+
+  <div class="small mt-3" id="solWalletStatus" style="color: rgba(233,243,239,0.75);"></div>
+</div>
+
+<!-- Solana wallet modal -->
+<div class="modal fade" id="solWalletModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content lhx-card" style="background: rgba(8,10,9,.98); border-radius: 22px;">
+      <div class="modal-header border-0 pb-0">
+        <div class="w-100 d-flex justify-content-between align-items-start">
+          <div>
+            <div class="lhx-pill lhx-game-font mb-2">Games Setup</div>
+            <div class="lhx-h2 lhx-game-font mb-0">Register Solana Wallet</div>
+            <div class="lhx-muted small mt-1">This wallet must match the sender of your on-chain bet transaction.</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <div class="modal-body pt-3">
+        <div class="lhx-card p-4" style="background: rgba(255,255,255,0.02);">
+          <form id="solWalletForm">
+            {% csrf_token %}
+            <label class="form-label lhx-title">Solana Wallet Address</label>
+            <input
+              id="solWalletInput"
+              type="text"
+              class="form-control form-control-lg bg-dark text-white border-secondary lhx-mono"
+              placeholder="Paste your Solana address..."
+              value="{% if primary_solana_wallet %}{{ primary_solana_wallet|escape }}{% endif %}"
+              required
+            >
+            <div class="lhx-muted small mt-2">
+              After saving, bets will only be accepted if the TX sender matches one of your registered Solana wallet(s).
+            </div>
+
+            <button type="submit" class="lhx-btn w-100 py-3 fs-5 mt-3">✅ SAVE WALLET</button>
+            <div class="small mt-3" id="solWalletModalStatus" style="color: rgba(233,243,239,0.75);"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0">
+        <div class="lhx-muted small">Tip: Use the exact wallet you will send SOL from in Phantom.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     LOGIN REQUIRED MODAL
+     ========================= -->
+<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content lhx-card" style="background: rgba(8,10,9,.98); border-radius: 22px;">
+      <div class="modal-header border-0 pb-0">
+        <div class="w-100 d-flex justify-content-between align-items-start">
+          <div>
+            <div class="lhx-pill lhx-game-font mb-2">Authentication</div>
+            <div class="lhx-h2 lhx-game-font mb-0">Login Required</div>
+            <div class="lhx-muted small mt-1">
+              You need to connect your wallet to place bets.
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <div class="modal-body pt-3">
+        <div class="lhx-card p-4" style="background: rgba(255,255,255,0.02);">
+          <div class="lhx-muted">
+            Please log in (connect your wallet) first, then come back to place a bet.
+          </div>
+
+          <div class="lhx-divider my-3"></div>
+
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="lhx-btn px-4" data-bs-dismiss="modal">
+              ✅ OK
+            </button>
+            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+
+          <div class="small mt-3" id="loginRequiredModalStatus" style="color: rgba(233,243,239,0.75);"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0">
+        <div class="lhx-muted small">Tip: once logged in, you may still need to register a Solana sender wallet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     BET MODAL (FOMO)
+     ========================= -->
+<div
+    class="modal fade"
+    id="betModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content lhx-card" style="background: rgba(8,10,9,.98); border-radius: 22px;">
+            <div class="modal-header border-0 pb-0">
+                <div class="w-100 d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="lhx-pill lhx-game-font mb-2">On-Chain · Verified</div>
+                        <div class="lhx-h2 lhx-game-font mb-0" id="betModalTitle">Place Bet</div>
+                        <div class="lhx-muted small mt-1">Send SOL to the game wallet, then paste TX signature to finalize.</div>
+                    </div>
+                    <button
+                        type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                    ></button>
+                </div>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="row g-3">
+                    <!-- Left: Live State -->
+                    <div class="col-lg-6">
+                        <div class="lhx-card p-3" style="background: rgba(255,255,255,0.02);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="lhx-data-label mb-0">CRASH TIMER</div>
+                                <div class="lhx-game-timer urgent lhx-game-font" id="betModalTimer">00:00:00</div>
+                            </div>
+                            <div class="lhx-divider my-3"></div>
+                            <div class="lhx-data-label">CURRENT KING 👑</div>
+                            <div class="lhx-mono fs-5 text-white" id="betModalKing">Unknown</div>
+                            <div class="lhx-divider my-3"></div>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="lhx-data-label">POT</div>
+                                    <div class="lhx-pot-display" id="betModalPot">0</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="lhx-data-label">FEE</div>
+                                    <div class="lhx-data-val" id="betModalFee">8%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lhx-card p-3 mt-3" style="background: rgba(255,255,255,0.02);">
+                            <div class="lhx-data-label">GAME WALLET</div>
+                            <div class="input-group input-group-sm mt-2">
+                                <input
+                                    id="betModalWallet"
+                                    type="text"
+                                    class="form-control bg-dark text-white border-secondary lhx-mono"
+                                    readonly
+                                >
+                                <button class="btn btn-outline-secondary" type="button" id="betModalCopyBtn">Copy</button>
+                            </div>
+                            <div class="lhx-muted small mt-2">
+                                1) Send your bet amount in SOL to this wallet.
+                                <br>
+                                2) Copy the transaction signature.
+                                <br>
+                                3) Paste below and submit to finalize.
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right: Submit -->
+                    <div class="col-lg-6">
+                        <div class="lhx-card p-4" style="background: rgba(255,255,255,0.02);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="lhx-title lhx-game-font">Finalize Bet</div>
+                                <div class="lhx-badge">Secure</div>
+                            </div>
+                            <div class="lhx-divider my-3"></div>
+                            <form id="betModalForm">
+                                {% csrf_token %}
+                                <input type="hidden" id="betModalGameId" value="">
+                                <div class="mb-3">
+                                    <label class="form-label lhx-title">Bet Amount (SOL)</label>
+                                    <input
+                                        id="betModalAmount"
+                                        type="text"
+                                        class="form-control form-control-lg bg-dark text-white border-success"
+                                        readonly
+                                        inputmode="decimal"
+                                        placeholder="Loading..."
+                                    >
+                                    <div class="form-text text-secondary" id="betModalRuleText">Minimum bet will be shown here.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">TX Signature</label>
+                                    <input
+                                        id="betModalTx"
+                                        type="text"
+                                        class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Paste TX signature here..."
+                                        required
+                                    >
+                                </div>
+                                <div class="lhx-muted small mb-3">
+                                    Tip: if your TX isn’t found immediately, wait 5–15 seconds and retry.
+                                </div>
+                                <button type="submit" class="lhx-btn w-100 py-3 fs-5">🚀 SUBMIT BET</button>
+                                <div class="small mt-3" id="betModalStatus" style="color: rgba(233,243,239,0.75);"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <div class="lhx-muted small">
+                    By submitting you agree you sent SOL to the correct game wallet. Admin can reject invalid TX.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  window.__WALLET_ADDRESS__ = "{{ wallet_address|default:''|escapejs }}";
+  window.__HAS_SOL_WALLET__ = {{ has_solana_wallet|yesno:"true,false" }};
+</script>
+
+
+<!-- TIMER SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  function parseDuration(str) {
+    const p = (str || "").split(':').map(Number);
+    if (p.length === 3) return p[0]*3600 + p[1]*60 + p[2];
+    if (p.length === 2) return p[0]*60 + p[1];
+    return 0;
+  }
+
+  function formatDuration(secs) {
+    secs = Math.max(0, secs|0);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return [h,m,s].map(v => v < 10 ? "0"+v : v).join(':');
+  }
+
+  function revealWinningNumbers(timerEl) {
+    const card = timerEl.closest('.js-lottery-card');
+    if (!card) return;
+
+    const picks = Number(card.dataset.picks || 3);
+    const winningRaw = (card.dataset.winning || "").trim();
+
+    const timerWrap = card.querySelector('.lhx-timer-wrap');
+    const resultWrap = card.querySelector('.lhx-result-wrap');
+    const ballsWrap = card.querySelector('.js-balls');
+    if (!timerWrap || !resultWrap || !ballsWrap) return;
+
+    const thirdBall = ballsWrap.querySelector('.js-ball-3');
+    if (thirdBall) thirdBall.style.display = (picks === 3) ? '' : 'none';
+
+    let nums = [];
+    if (winningRaw) {
+      nums = winningRaw.split(/[^0-9]+/).filter(Boolean).slice(0, picks);
+    }
+
+    const ballEls = ballsWrap.querySelectorAll('.js-ball');
+    ballEls.forEach((b, idx) => {
+      if (idx >= picks) return;
+      b.textContent = nums[idx] || "?";
+      b.classList.add('lhx-ball-pop');
+    });
+
+    timerWrap.classList.add('d-none');
+    resultWrap.classList.remove('d-none');
+  }
+
+  // ✅ One global interval so WS updates can "reset" timers instantly
+  setInterval(() => {
+    // ✅ re-select each tick so dynamically-added timers are included
+    const timers = document.querySelectorAll('.js-timer');
+
+    timers.forEach(el => {
+      const endsAt = (el.dataset.endsAt || "").trim();
+
+      // ✅ FOMO: compute from absolute ends_at (WS-safe, cross-tab reset)
+      if (endsAt) {
+        const endsMs = Date.parse(endsAt);
+        const nowMs = Date.now();
+        const secs = Math.max(0, Math.floor((endsMs - nowMs) / 1000));
+        el.innerText = formatDuration(secs);
+        return;
+      }
+
+      // Lottery/other: fallback to decrementing from dataset.time
+      if (typeof el.secondsLeft === 'undefined') {
+        el.secondsLeft = parseDuration(el.dataset.time || el.innerText || "00:00:00");
+      }
+
+      el.secondsLeft = Math.max(0, (el.secondsLeft|0) - 1);
+      el.innerText = formatDuration(el.secondsLeft);
+
+      if (el.secondsLeft <= 0) {
+        revealWinningNumbers(el);
+      }
+    });
+  }, 1000);
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const betModalEl = document.getElementById('betModal');
+  const betModal = betModalEl ? new bootstrap.Modal(betModalEl) : null;
+
+  let timerInterval = null;
+  let timerSeconds = 0;
+
+  function hmsToSeconds(hms) {
+    const p = (hms || "00:00:00").split(':').map(Number);
+    if (p.length !== 3) return 0;
+    return p[0]*3600 + p[1]*60 + p[2];
+  }
+  function secondsToHms(secs) {
+    secs = Math.max(0, secs|0);
+    const h = Math.floor(secs/3600);
+    const m = Math.floor((secs%3600)/60);
+    const s = secs%60;
+    return [h,m,s].map(v => v < 10 ? "0"+v : v).join(":");
+  }
+  function setStatus(msg, isError=false) {
+    const el = document.getElementById('betModalStatus');
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.color = isError ? "rgba(255,87,87,.95)" : "rgba(51,240,163,.95)";
+  }
+  // Always show up to 5 decimals, using STRING math (no float rounding bugs).
+  function formatSol5(v) {
+    let s = String(v ?? "").trim();
+    if (!s) return "0";
+    if (/[eE]/.test(s)) { // ultra-rare safeguard
+      const n = Number(s);
+      if (!Number.isFinite(n)) return "0";
+      s = n.toFixed(9);
+    }
+
+    // split sign
+    let sign = "";
+    if (s.startsWith("-")) { sign = "-"; s = s.slice(1); }
+
+    // split decimals
+    let [intPart, decPart = ""] = s.split(".");
+    intPart = intPart || "0";
+    decPart = decPart.replace(/[^0-9]/g, "");
+
+    // pad to at least 5 then cut to 5
+    decPart = (decPart + "00000").slice(0, 5);
+
+    // trim trailing zeros (up to 5dp)
+    decPart = decPart.replace(/0+$/, "");
+
+    return sign + intPart + (decPart ? "." + decPart : "");
+  }
+
+  // If you want FIXED 5 decimals like limit card style (0.01000):
+  function formatSolFixed5(v) {
+    let s = String(v ?? "").trim();
+    if (!s) return "0.00000";
+    if (/[eE]/.test(s)) {
+      const n = Number(s);
+      if (!Number.isFinite(n)) return "0.00000";
+      s = n.toFixed(9);
+    }
+
+    let sign = "";
+    if (s.startsWith("-")) { sign = "-"; s = s.slice(1); }
+
+    let [intPart, decPart = ""] = s.split(".");
+    intPart = intPart || "0";
+    decPart = decPart.replace(/[^0-9]/g, "");
+    decPart = (decPart + "00000").slice(0, 5);
+
+    return sign + intPart + "." + decPart;
+  }
+
+
+  // For INPUT VALUE (must be precise; avoid float rounding bugs)
+  function formatSolExactStr(v) {
+    const s = String(v ?? "").trim();
+    if (!s) return "0";
+    // If server ever sends exponent (rare), fall back safely
+    if (/[eE]/.test(s)) {
+      const n = Number(s);
+      if (!Number.isFinite(n)) return "0";
+      return n.toFixed(9).replace(/\.?0+$/, "");
+    }
+    // Trim trailing zeros but keep real value
+    return s.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,"").replace(/^(-?)\./,"$10.");
+  }
+
+  // For UI DISPLAY (you asked for "up to 5 digits" after decimal)
+  function formatSolUI(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return "0";
+    if (Math.abs(n) < 1e-9) return "0";
+    return n.toFixed(5).replace(/\.?0+$/, "");
+  }
+
+
+  function shortenWallet(w) {
+    const s = String(w || "").trim();
+    if (!s) return "Unknown";
+    // ✅ do not shorten "Unknown"
+    if (s === "Unknown") return "Unknown";
+    if (s.length <= 12) return s;
+    return `${s.slice(0, 4)}...${s.slice(-4)}`;
+  }
+
+
+  function applyStateToModal(data) {
+    // data matches websocket payload format from server
+    if (!data || !data.game || !data.session) return;
+
+    document.getElementById('betModalTitle').textContent = data.game.name;
+    document.getElementById('betModalGameId').value = data.game.id;
+
+    const kingEl = document.getElementById('betModalKing');
+    const kingWallet = data.session.king_wallet || "Unknown";
+    kingEl.textContent = shortenWallet(kingWallet);
+    kingEl.title = kingWallet;
+
+    document.getElementById('betModalPot').textContent = `${formatSolExactStr(data.session.pot_total_sol)} SOL`;
+
+    document.getElementById('betModalFee').textContent = `${data.game.protocol_fee_pct}%`;
+    document.getElementById('betModalWallet').value = data.game.sol_wallet || "";
+
+    const amountEl = document.getElementById('betModalAmount');
+    const ruleEl = document.getElementById('betModalRuleText');
+
+    // required_bet_sol comes from server as a DECIMAL string -> keep it exact for the readonly input
+    const requiredRaw = data.session.required_bet_sol ?? "0";
+
+    amountEl.value = formatSolExactStr(requiredRaw);
+
+    const subtype = String(data.game.subtype || "").trim();
+    const isLimit = (subtype === "limit");
+
+    ruleEl.textContent = isLimit
+      ? `Fixed entry: ${formatSol5(requiredRaw)} SOL`
+      : `Minimum bet: ${formatSol5(requiredRaw)} SOL`;
+
+
+
+    // Timer: if we get an ends_at we reset the countdown to match
+    if (data.session.fomo_ends_at) {
+      const endsMs = Date.parse(data.session.fomo_ends_at);
+      const nowMs = Date.now();
+      timerSeconds = Math.max(0, Math.floor((endsMs - nowMs) / 1000));
+      document.getElementById('betModalTimer').textContent = secondsToHms(timerSeconds);
+    } else if (data.session.timer) {
+      timerSeconds = hmsToSeconds(data.session.timer);
+      document.getElementById('betModalTimer').textContent = secondsToHms(timerSeconds);
+    }
+  }
+
+
+
+  async function loadState(gameId) {
+    const urlTmpl = "{% url 'game_session_state_json' 999999 %}";
+    const url = urlTmpl.replace("999999", gameId);
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    let data = null;
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`State API failed (${res.status}). First chars: ${text.slice(0, 80)}`);
+    }
+
+    if (!ct.includes("application/json")) {
+      const text = await res.text();
+      throw new Error(`Expected JSON but got "${ct}". First chars: ${text.slice(0, 80)}`);
+    }
+
+    data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Failed to load game state");
+
+
+    // ✅ Normalize REST response into the same shape as websocket payload,
+    // then use ONE renderer: applyStateToModal()
+    applyStateToModal({
+      game: {
+        id: data.game.id,
+        name: data.game.name,
+        category: data.game.category,
+        subtype: data.game.subtype,
+        protocol_fee_pct: data.game.protocol_fee_pct,
+        sol_wallet: data.game.sol_wallet,
+        min_bet_sol: data.game.min_bet_sol,
+        fixed_bet_sol: data.game.fixed_bet_sol,
+        increment_pct: data.game.increment_pct,
+      },
+      session: {
+        id: data.session.id,
+        status: data.session.status,
+        pot_total_sol: data.session.pot_total_sol,
+        king_wallet: data.session.king_wallet,
+        timer: data.session.timer,
+        required_bet_sol: data.session.required_bet_sol,
+        fomo_ends_at: data.session.fomo_ends_at,
+      }
+    });
+
+    // ✅ Start / restart the countdown interval (modal-local)
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timerSeconds = Math.max(0, timerSeconds - 1);
+      const el = document.getElementById('betModalTimer');
+      if (!el) return;
+      el.textContent = secondsToHms(timerSeconds);
+      if (timerSeconds <= 10) el.classList.add('urgent');
+      if (timerSeconds === 0) clearInterval(timerInterval);
+    }, 1000);
+
+    setStatus("");
+
+  }
+
+  // Open modal handler
+  function setSolStatus(msg, isError=false) {
+    const el = document.getElementById('solWalletStatus');
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.color = isError ? "rgba(255,87,87,.95)" : "rgba(51,240,163,.95)";
+  }
+
+  // =========================
+  // Solana Wallet Save (Games)
+  // =========================
+  const solWalletModalEl = document.getElementById('solWalletModal');
+  const solWalletModal = solWalletModalEl ? new bootstrap.Modal(solWalletModalEl) : null;
+
+  function setSolModalStatus(msg, isError=false) {
+    const el = document.getElementById('solWalletModalStatus');
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.color = isError ? "rgba(255,87,87,.95)" : "rgba(51,240,163,.95)";
+  }
+
+  const openSolBtn = document.getElementById("openSolWalletModalBtn");
+  if (openSolBtn && solWalletModal) {
+    openSolBtn.addEventListener("click", () => {
+      solWalletModal.show();
+    });
+  }
+
+  const solForm = document.getElementById("solWalletForm");
+  if (solForm) {
+    solForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setSolModalStatus("Saving...", false);
+
+      const isLoggedIn = Boolean((window.__WALLET_ADDRESS__ || "").trim());
+      if (!isLoggedIn) {
+        setSolModalStatus("Please log in first.", true);
+        return;
+      }
+
+      const input = document.getElementById("solWalletInput");
+      const sol = (input?.value || "").trim();
+      if (!sol) {
+        setSolModalStatus("Please enter a Solana wallet.", true);
+        return;
+      }
+
+      const csrf = solForm.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+      const body = new URLSearchParams();
+      body.append("solana_wallet", sol);
+
+      // urls.py needs: path("games/solana-wallet/", views.user_update_solana_wallet, name="user_update_solana_wallet")
+      const url = "{% url 'user_update_solana_wallet' %}";
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrf,
+          "Accept": "application/json",
+        },
+        body: body.toString(),
+      });
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+      if (!ct.includes("application/json")) {
+        const text = await res.text();
+        setSolModalStatus(`Save failed (${res.status}): ${text.slice(0, 120)}`, true);
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setSolModalStatus(data.error || `Save failed (${res.status})`, true);
+        return;
+      }
+
+      // Update UI + gate flags
+      window.__HAS_SOL_WALLET__ = true;
+      document.getElementById("uiPrimarySolWallet").textContent = data.primary || sol;
+
+      setSolStatus("Solana wallet saved ✅ Bets enabled.", false);
+      setSolModalStatus("Saved ✅ You can now place bets.", false);
+
+      // Close modal after a short moment
+      setTimeout(() => {
+        try { solWalletModal.hide(); } catch {}
+      }, 400);
+    });
+  }
+
+  // Gate bet modal open: login + sol wallet required
+  document.querySelectorAll('.js-open-bet-modal').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const gameId = btn.getAttribute('data-game-id');
+      if (!gameId || !betModal) return;
+
+      const isLoggedIn = Boolean((window.__WALLET_ADDRESS__ || "").trim());
+      const hasSol = Boolean(window.__HAS_SOL_WALLET__);
+
+      if (!isLoggedIn) {
+        setSolStatus("Please log in to place bets.", true);
+        return;
+      }
+      if (!hasSol) {
+        setSolStatus("Please register your Solana wallet to place bets.", true);
+        if (solWalletModal) solWalletModal.show();
+        return;
+      }
+
+      try {
+        await loadState(gameId);
+        betModal.show();
+      } catch (err) {
+        alert(err.message || "Failed to open bet modal");
+      }
+    });
+  });
+
+  // Copy wallet
+  const copyBtn = document.getElementById('betModalCopyBtn');
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const w = document.getElementById('betModalWallet').value || "";
+      try {
+        await navigator.clipboard.writeText(w);
+        setStatus("Copied wallet address ✅");
+      } catch {
+        setStatus("Copy failed. Please manually select & copy.", true);
+      }
+    });
+  }
+
+  // Submit bet
+  const form = document.getElementById('betModalForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setStatus("Submitting...", false);
+
+      const gameId = document.getElementById('betModalGameId').value;
+      const amount = document.getElementById('betModalAmount').value;
+      const tx = document.getElementById('betModalTx').value;
+
+      const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+      const body = new URLSearchParams();
+      body.append("amount_sol", amount);
+      body.append("tx_signature", tx);
+
+      const betUrlTmpl = "{% url 'game_place_bet' 999999 %}";
+      const betUrl = betUrlTmpl.replace("999999", gameId);
+
+      const res = await fetch(betUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrf,
+          "Accept": "application/json",
+        },
+        body: body.toString()
+      });
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+      // ✅ Prefer JSON error messages even when status is 400/401
+      if (ct.includes("application/json")) {
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          setStatus(data.error || `Submit failed (${res.status})`, true);
+          return;
+        }
+
+        // success path continues below
+        setStatus("Bet submitted ✅ Verified + Applied.", false);
+        document.getElementById('betModalTx').value = "";
+
+        applyStateToModal({
+          game: data.game,
+          session: data.session,
+        });
+        applyStateToCard({
+          type: "game_update",
+          game: data.game,
+          session: data.session,
+        });
+        return;
+      }
+
+      // Non-JSON fallback
+      const text = await res.text();
+      setStatus(`Submit failed (${res.status}): ${text.slice(0, 120)}`, true);
+      return;
+
+
+      setStatus("Bet submitted ✅ Verified + Applied.", false);
+      document.getElementById('betModalTx').value = "";
+
+      // Apply server-returned state immediately (bettor's tab fix)
+      applyStateToModal({
+        game: data.game,
+        session: data.session,
+      });
+      applyStateToCard({
+        type: "game_update",
+        game: data.game,
+        session: data.session,
+      });
+
+    });
+  }
+  // ✅ Update FOMO card UI from server truth (used by WS + immediate POST return)
+  function applyStateToCard(msg) {
+    if (!msg || !msg.game || !msg.session) return;
+
+    const gameId = String(msg.game.id);
+
+    // Pot (leave high precision formatting if you want; not part of your 3 issues)
+    const potEl = document.getElementById(`fomo-card-pot-${gameId}`);
+    if (potEl) potEl.innerHTML = `${formatSolExactStr(msg.session.pot_total_sol)} <span class="fs-6">SOL</span>`;
+
+    // King (do not shorten "Unknown")
+    const kingEl = document.getElementById(`fomo-card-king-${gameId}`);
+    if (kingEl) {
+      const kw = (msg.session.king_wallet || "Unknown").trim();
+      kingEl.textContent = (kw === "Unknown") ? "Unknown" : shortenWallet(kw);
+      kingEl.title = kw;
+    }
+
+    // Timer: drive by ends_at so it resets everywhere instantly
+    const timerEl = document.getElementById(`fomo-card-timer-${gameId}`);
+    if (timerEl) {
+      if (msg.session.fomo_ends_at) {
+        timerEl.dataset.endsAt = msg.session.fomo_ends_at;
+      } else {
+        timerEl.dataset.endsAt = "";
+        if (msg.session.timer) timerEl.dataset.time = msg.session.timer;
+      }
+    }
+
+    // ✅ Bets count (social proof)
+    const betsEl = document.getElementById(`fomo-card-bets-${gameId}`);
+    if (betsEl && msg.session && typeof msg.session.bets_count !== "undefined") {
+      betsEl.textContent = String(msg.session.bets_count);
+    }
+
+    // Bets count (real-time)
+    if (typeof msg.session.bets_count !== "undefined") {
+      const bcEl = document.getElementById(`fomo-card-betscount-${gameId}`);
+      if (bcEl) bcEl.textContent = String(msg.session.bets_count);
+    }
+
+    // Required next bet (display up to 5 decimals)
+    const requiredRaw = msg.session.required_bet_sol ?? "0";
+
+    const nextBidEl = document.getElementById(`fomo-card-nextbid-${gameId}`);
+    if (nextBidEl) nextBidEl.textContent = formatSol5(requiredRaw);
+
+    const btnAmtEl = document.getElementById(`fomo-card-btnamt-${gameId}`);
+    if (btnAmtEl) btnAmtEl.textContent = formatSol5(requiredRaw);
+
+
+
+    // ✅ Prev bid (only shown in no-limit card, harmless in limit)
+    if (typeof msg.session.prev_bid_sol !== "undefined") {
+      const prevEl = document.getElementById(`fomo-card-prevbid-${gameId}`);
+      if (prevEl) prevEl.textContent = formatSol5(msg.session.prev_bid_sol);
+    }
+
+
+  }
+
+  async function refreshHud() {
+    const myWallet = (window.__WALLET_ADDRESS__ || "").trim();
+    if (!myWallet) return;
+
+    const url = "{% url 'user_hud_state_json' %}";
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data.ok) return;
+
+    const activeWrap = document.getElementById("hud-active-list");
+    const histWrap = document.getElementById("hud-history-list");
+    if (!activeWrap || !histWrap) return;
+
+    // Render Active
+    if (!data.active || data.active.length === 0) {
+      activeWrap.innerHTML = `
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-secondary py-5">
+          <div class="fs-1 opacity-25 mb-2">🎲</div>
+          <div class="small">No active bets found.</div>
+          <div class="small">Jump into a game!</div>
+        </div>
+      `;
+    } else {
+      activeWrap.innerHTML = data.active.map(b => {
+        const statusHtml = (b.status === "Winning")
+          ? `<span class="text-warning fw-bold small">👑 Winning</span>`
+          : `<span class="lhx-accent fw-bold small">🟢 Live</span>`;
+
+        return `
+          <div class="lhx-hud-card live mb-3">
+            <div class="lhx-hud-card-header">
+              <div>
+                <div class="lhx-hud-lbl text-warning mb-1">Live Game</div>
+                <div class="fw-bold text-white lhx-game-font fs-5">${b.game_name}</div>
+                <div class="small text-secondary" style="font-size: 11px;">${b.details}</div>
+              </div>
+              <div class="text-end">
+                <div class="lhx-hud-lbl">Status</div>
+                <span id="hud-status-${b.game_id}">${statusHtml}</span>
+              </div>
+            </div>
+
+            <div class="lhx-hud-lbl mb-1 text-center">Round Ends In</div>
+            <div
+              class="lhx-hud-timer-big hud-js-timer"
+              id="hud-timer-${b.game_id}"
+              data-ends-at="${b.ends_at || ""}"
+            >
+              00:00:00
+            </div>
+
+            <div class="lhx-hud-grid">
+              <div class="lhx-hud-stat-box">
+                <div class="lhx-hud-lbl">My Wager</div>
+                <div class="lhx-hud-val lhx-accent">${formatSol5(b.wager)} SOL</div>
+
+              </div>
+              <div class="lhx-hud-stat-box">
+                <div class="lhx-hud-lbl">Pick / Pos</div>
+                <div class="lhx-hud-val text-white">-</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Render History
+    if (!data.history || data.history.length === 0) {
+      histWrap.innerHTML = `
+        <div class="text-center text-secondary py-5 small">
+          No history available yet.
+        </div>
+      `;
+    } else {
+      histWrap.innerHTML = data.history.map(h => {
+          function formatSignedSol5(s) {
+            const raw = String(s ?? "").trim();
+            if (!raw) return "0";
+            const sign = raw.startsWith("-") ? "-" : (raw.startsWith("+") ? "+" : "");
+            const body = raw.replace(/^[-+]/, "");
+            return sign + formatSol5(body);
+          }
+
+          const winSide = (h.outcome === "win")
+            ? `
+              <div class="lhx-hist-badge win">WON</div>
+              <div class="lhx-accent fw-bold lhx-game-font mt-1">${formatSignedSol5(h.profit_display)} SOL</div>
+            `
+            : `
+              <div class="lhx-hist-badge loss">LOST</div>
+              <div class="text-secondary lhx-game-font mt-1">-${formatSol5(h.wager)} SOL</div>
+            `;
+
+
+        const winnerDisp = (h.winner && h.winner !== "Unknown" && h.winner.length > 12)
+          ? `${h.winner.slice(0,4)}...${h.winner.slice(-4)}`
+          : (h.winner || "Unknown");
+
+        return `
+          <div class="lhx-hist-row mb-2 ${h.outcome === "win" ? "win" : "loss"}">
+            <div class="lhx-hist-top">
+              <div>
+                <div class="fw-bold text-white lhx-game-font">${h.game_name}</div>
+                <div class="small text-white-50" style="font-size: 10px;">${h.date}</div>
+              </div>
+              <div class="text-end">${winSide}</div>
+            </div>
+
+            <div class="lhx-hist-btm border-top border-white border-opacity-10 pt-2 mt-1">
+              <div>
+                <span class="lhx-hud-lbl">Bet:</span> <span class="text-white">${formatSol5(h.wager)} SOL</span>
+
+              </div>
+              <div>
+                <span class="lhx-hud-lbl">King:</span>
+                <span class="text-warning lhx-mono" title="${h.winner || "Unknown"}">${winnerDisp}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+
+  // ✅ Real-time websocket updates per game (modal live updates)
+  function connectGameSocket(gameId) {
+
+    const proto = (window.location.protocol === "https:") ? "wss" : "ws";
+    const wsUrl = `${proto}://${window.location.host}/ws/games/${gameId}/`;
+    const ws = new WebSocket(wsUrl);
+
+
+  ws.onmessage = (evt) => {
+    let msg = null;
+    try { msg = JSON.parse(evt.data); } catch { return; }
+
+    // Some channel consumers send {payload:{...}} — handle both safely (game_update + past_result)
+    if (msg && msg.payload && msg.payload.type) msg = msg.payload;
+
+    // Past result row update
+    if (msg && msg.type === "past_result" && msg.row) {
+      const row = msg.row;
+      const tbody = document.getElementById(`past-results-body-${row.game_id}`);
+      if (tbody) {
+        // Build a row that matches your past_results.html columns.
+        // NOTE: We include Bets# and LastBet columns but they’ll simply appear in whichever table template is used.
+        const tr = document.createElement('tr');
+
+        // detect whether this table is "show_bets" or "show_last_bet" by header text
+        const table = tbody.closest('table');
+        const ths = table ? Array.from(table.querySelectorAll('thead th')).map(th => (th.textContent || "").trim()) : [];
+        const hasBetsCol = ths.includes("Bets #");
+        const hasLastBetCol = ths.includes("Last Bet");
+
+        let middleTd = "";
+        if (hasBetsCol) middleTd = `<td class="text-white">${row.bets}</td>`;
+        if (hasLastBetCol) middleTd = `<td class="text-white">${row.last_bet}</td>`;
+
+        tr.innerHTML = `
+          <td class="lhx-mono text-white">${row.winner}</td>
+          ${middleTd}
+          <td class="text-end fw-bold lhx-accent">${row.pot}</td>
+          <td class="text-end text-secondary">${row.ended}</td>
+        `;
+        tbody.prepend(tr);
+
+        // ✅ cap at 25 rows to match PAST_ROWS_PER_MODE
+        while (tbody.children.length > 25) {
+          tbody.removeChild(tbody.lastElementChild);
+        }
+
+
+      }
+      return;
+    }
+
+    // Game state update
+    if (!msg || msg.type !== "game_update") return;
+
+    applyStateToCard(msg);
+
+    // ✅ Refresh HUD lists so "Winning" and history are always current without page refresh
+    refreshHud();
+
+    const currentModalGameId = document.getElementById('betModalGameId')?.value;
+
+    if (String(currentModalGameId || "") === String(msg.game.id)) {
+      applyStateToModal(msg);
+    }
+
+    // ✅ Update HUD live bet timer + status if present
+    const hudTimer = document.getElementById(`hud-timer-${msg.game.id}`);
+    if (hudTimer && msg.session.fomo_ends_at) {
+      hudTimer.dataset.endsAt = msg.session.fomo_ends_at;
+    }
+
+    const hudStatusWrap = document.getElementById(`hud-status-${msg.game.id}`);
+    if (hudStatusWrap) {
+      // wallet injected into template (see below)
+      const myWallet = (window.__WALLET_ADDRESS__ || "").trim();
+      const king = (msg.session.king_wallet || "Unknown").trim();
+      if (myWallet && king && myWallet === king) {
+        hudStatusWrap.innerHTML = `<span class="text-warning fw-bold small">👑 Winning</span>`;
+      } else {
+        hudStatusWrap.innerHTML = `<span class="lhx-accent fw-bold small">🟢 Live</span>`;
+      }
+    }
+
+  };
+
+
+    ws.onclose = () => {
+      setTimeout(() => connectGameSocket(gameId), 1500);
+    };
+
+    return ws;
+  }
+
+  // Start sockets for all visible FOMO game buttons/cards
+  document.querySelectorAll('.js-open-bet-modal[data-game-id]').forEach(btn => {
+    const gameId = btn.getAttribute('data-game-id');
+    if (gameId) connectGameSocket(gameId);
+  });
+
+
+  // Cleanup when modal closes
+  if (betModalEl) {
+    betModalEl.addEventListener('hidden.bs.modal', () => {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      timerSeconds = 0;
+      setStatus("");
+    });
+  }
+});
+</script>
+{% endblock %}

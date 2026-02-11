@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>LinkHash Market</title>
+
+  {% load static %}
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Theme (base + mobile override) -->
+  <link rel="stylesheet" href="{% static 'market/theme.css' %}?v=1011">
+  <link rel="stylesheet" href="{% static 'market/theme_mobile.css' %}?v=1001">
+
+  <!-- Solana -->
+  <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+
+  <!-- CSRF helper -->
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</head>
+
+<body class="lhx-bg">
+
+  <!-- ========================= -->
+  <!-- MOBILE NAV (top bar)      -->
+  <!-- ========================= -->
+  <nav class="lhx-mnav">
+    <div class="container">
+      <div class="lhx-mnav-inner">
+
+        <!-- Left: brand -->
+        <div class="lhx-mnav-left">
+          <a href="/" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
+            <span class="lhx-dot"></span>
+            <span class="lhx-brand" style="color:var(--lhx-text);">LinkHash</span>
+          </a>
+        </div>
+
+        <!-- Right: hamburger -->
+        <div class="lhx-mnav-right">
+          <button class="lhx-hamburger" id="lhxMobileMenuBtn" type="button" aria-label="Menu">
+            <span class="lhx-hamburger-line"></span>
+            <span class="lhx-hamburger-line"></span>
+            <span class="lhx-hamburger-line"></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================= -->
+  <!-- MOBILE MENU (overlay)     -->
+  <!-- ========================= -->
+  <div class="lhx-mmenu" id="lhxMobileMenu">
+    <div class="lhx-mmenu-backdrop" id="lhxMobileMenuBackdrop"></div>
+
+    <div class="lhx-mmenu-panel">
+
+      {% if request.session.wallet_address %}
+        <!-- Wallet chip -->
+        <div class="lhx-mmenu-wallet">
+          <img class="lhx-mmenu-wallet-icon" src="{% static 'market/icons/phantom.png' %}" alt="Phantom">
+          <span class="lhx-mmenu-wallet-addr">
+            {{ request.session.wallet_address|slice:":4" }}...{{ request.session.wallet_address|slice:"-4:" }}
+          </span>
+        </div>
+      {% else %}
+        <button class="lhx-mmenu-connect" type="button" id="lhxMobileConnectBtn">
+          Connect Wallet
+        </button>
+      {% endif %}
+
+      <!-- Nav links -->
+      <div class="lhx-mmenu-links">
+        <a class="lhx-mmenu-link" href="/">
+          <span class="lhx-mmenu-link-icon">📊</span> Signals
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'about' %}">
+          <span class="lhx-mmenu-link-icon">ℹ️</span> About
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'partnership' %}">
+          <span class="lhx-mmenu-link-icon">🤝</span> Partnership
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'campaign_list' %}">
+          <span class="lhx-mmenu-link-icon">📢</span> Campaigns
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'games_home' %}">
+          <span class="lhx-mmenu-link-icon">🎮</span> Games
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'leaderboard' %}">
+          <span class="lhx-mmenu-link-icon">🏆</span> Leaderboard
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'announcement_list' %}">
+          <span class="lhx-mmenu-link-icon">📣</span> Announcements
+        </a>
+        <a class="lhx-mmenu-link" href="{% url 'prediction_plus' %}">
+          <span class="lhx-mmenu-link-icon">🔮</span> Prediction+
+        </a>
+
+        {% if request.session.wallet_address %}
+          <div class="lhx-mmenu-divider"></div>
+          <a class="lhx-mmenu-link" href="{% url 'profile' %}">
+            <span class="lhx-mmenu-link-icon">👤</span> Profile
+          </a>
+          <!--
+          <a class="lhx-mmenu-link" href="{% url 'settings' %}">
+            <span class="lhx-mmenu-link-icon">⚙️</span> Settings
+          </a>
+          -->
+          <div class="lhx-mmenu-divider"></div>
+          <a class="lhx-mmenu-link danger" href="{% url 'logout' %}">
+            <span class="lhx-mmenu-link-icon">⎋</span> Logout
+          </a>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mb-2" style="font-size:14px;">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main class="container py-4">
+    {% block content %}{% endblock %}
+  </main>
+
+
+  <!-- On-chain Info Modal (same as desktop) -->
+  <div class="modal fade" id="onchainModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background: rgba(20,26,24,0.96); border: 1px solid rgba(80,255,180,0.18); border-radius: 18px;">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <div>
+            <div class="lhx-title" id="onchainModalTitle" style="margin:0;">On-chain Info</div>
+            <div class="small lhx-muted lhx-mono" id="onchainModalSub" style="margin-top:4px;"></div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="onchainModalBody" class="lhx-muted small">Loading...</div>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <button type="button" class="lhx-btn-outline" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS libs -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Drag-scroll carousel (same as desktop) -->
+  <script>
+  document.querySelectorAll('[data-drag-scroll]').forEach((track) => {
+    const intervalMs = parseInt(track.dataset.intervalMs || "5000", 10);
+    let autoTimer = null;
+    let isDragging = false;
+
+    const startAuto = () => {
+      stopAuto();
+      autoTimer = setInterval(() => {
+        if (isDragging) return;
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        const step = track.clientWidth;
+        if (track.scrollLeft + step >= maxScroll - 5) {
+          track.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          track.scrollBy({ left: step, behavior: "smooth" });
+        }
+      }, intervalMs);
+    };
+
+    const stopAuto = () => { if (autoTimer) clearInterval(autoTimer); autoTimer = null; };
+
+    let startX = 0, scrollStart = 0, moved = false;
+
+    track.addEventListener("pointerdown", (e) => {
+      isDragging = true; moved = false; startX = e.pageX; scrollStart = track.scrollLeft;
+      track.setPointerCapture(e.pointerId); stopAuto();
+    });
+    track.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 3) moved = true;
+      track.scrollLeft = scrollStart - dx;
+    });
+    const endDrag = () => { if (!isDragging) return; isDragging = false; setTimeout(startAuto, intervalMs); };
+    track.addEventListener("pointerup", endDrag);
+    track.addEventListener("pointercancel", endDrag);
+    track.addEventListener("pointerleave", endDrag);
+    track.addEventListener("click", (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); } moved = false; }, true);
+    startAuto();
+  });
+
+  // HTMX scroll after swap
+  document.body.addEventListener('htmx:afterSwap', function (evt) {
+    const swapped = evt.detail.target;
+    if (!swapped || !swapped.id) return;
+    const y = swapped.getBoundingClientRect().top + window.pageYOffset - 60;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  });
+
+  // On-chain modal helpers (same as desktop)
+  function escapeHtml(s) {
+    return (s || "").replace(/[&<>"']/g, function (m) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]);
+    });
+  }
+  function renderOnchainBody(data) {
+    const holders = (data && data.holders_count != null) ? Number(data.holders_count).toLocaleString() : "-";
+    const top20 = (data && data.top20_share_pct != null) ? `${Number(data.top20_share_pct).toFixed(2)}%` : "-";
+    const whales = (data && data.whales_ge_1pct_count != null) ? Number(data.whales_ge_1pct_count).toLocaleString() : "-";
+    return `<div class="d-flex flex-column gap-2">
+      <div class="d-flex justify-content-between"><span class="lhx-muted">Holders</span><span class="lhx-mono">${holders}</span></div>
+      <div class="d-flex justify-content-between"><span class="lhx-muted">Top 20 share</span><span class="lhx-mono">${top20}</span></div>
+      <div class="d-flex justify-content-between"><span class="lhx-muted">Whales (≥ 1%)</span><span class="lhx-mono">${whales}</span></div>
+      <div class="mt-2 small text-secondary">Source: on-chain (Helius)</div>
+    </div>`;
+  }
+  async function openOnchainModal(btn) {
+    const name = btn.getAttribute("data-token-name") || "Token";
+    const addr = btn.getAttribute("data-token-address") || "";
+    const url  = btn.getAttribute("data-onchain-url");
+    document.getElementById("onchainModalTitle").textContent = `${name} · On-chain Info`;
+    document.getElementById("onchainModalSub").textContent = addr ? `${addr.slice(0,6)}...${addr.slice(-6)}` : "";
+    document.getElementById("onchainModalBody").textContent = "Loading...";
+    const modal = new bootstrap.Modal(document.getElementById("onchainModal"));
+    modal.show();
+    try {
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+      if (!res.ok || data.error) { document.getElementById("onchainModalBody").innerHTML = `<div class="text-danger small">${escapeHtml(data.error || "Failed")}</div>`; return; }
+      document.getElementById("onchainModalBody").innerHTML = renderOnchainBody(data);
+    } catch (e) { document.getElementById("onchainModalBody").innerHTML = `<div class="text-danger small">Network error</div>`; }
+  }
+  document.addEventListener("click", function(e){ const btn = e.target.closest("[data-onchain-btn]"); if (!btn) return; e.preventDefault(); openOnchainModal(btn); });
+  </script>
+
+
+  <!-- ========================= -->
+  <!-- MOBILE HAMBURGER TOGGLE   -->
+  <!-- ========================= -->
+  <script>
+  (function(){
+    const menuBtn = document.getElementById("lhxMobileMenuBtn");
+    const menu = document.getElementById("lhxMobileMenu");
+    const backdrop = document.getElementById("lhxMobileMenuBackdrop");
+
+    if (!menuBtn || !menu) return;
+
+    function openMenu() {
+      menu.classList.add("open");
+      menuBtn.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeMenu() {
+      menu.classList.remove("open");
+      menuBtn.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    menuBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      if (menu.classList.contains("open")) closeMenu();
+      else openMenu();
+    });
+
+    if (backdrop) {
+      backdrop.addEventListener("click", closeMenu);
+    }
+
+    // Close on link click (for smooth nav)
+    menu.querySelectorAll(".lhx-mmenu-link").forEach(function(link) {
+      link.addEventListener("click", closeMenu);
+    });
+
+    // Escape key
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closeMenu();
+    });
+  })();
+  </script>
+
+
+  <!-- ========================= -->
+  <!-- Phantom Login (mobile)    -->
+  <!-- ========================= -->
+  <script>
+  (function(){
+    const connectBtn = document.getElementById("lhxMobileConnectBtn");
+
+    function base58Encode(bytes) {
+      const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      if (!bytes || bytes.length === 0) return "";
+      let digits = [0];
+      for (let i = 0; i < bytes.length; i++) {
+        let carry = bytes[i];
+        for (let j = 0; j < digits.length; j++) { const x = digits[j] * 256 + carry; digits[j] = x % 58; carry = (x / 58) | 0; }
+        while (carry) { digits.push(carry % 58); carry = (carry / 58) | 0; }
+      }
+      let zeros = 0;
+      while (zeros < bytes.length && bytes[zeros] === 0) zeros++;
+      let str = "";
+      for (let i = 0; i < zeros; i++) str += "1";
+      for (let i = digits.length - 1; i >= 0; i--) str += ALPHABET[digits[i]];
+      return str;
+    }
+
+    function getPhantomProvider() {
+      const p = window.phantom?.solana;
+      if (p && p.isPhantom) return p;
+      const s = window.solana;
+      if (s && s.isPhantom) return s;
+      return null;
+    }
+
+    function explainEnvironmentIfBad() {
+      const inIframe = (window.top !== window.self);
+      const secure = (window.isSecureContext === true);
+      if (inIframe) { alert("Wallet connect blocked: running inside an iframe. Open in a normal browser tab."); return false; }
+      if (!secure) { alert("Wallet connect blocked: not a secure context. Use HTTPS."); return false; }
+      return true;
+    }
+
+    async function doConnect(provider) {
+      try { await provider.disconnect(); } catch (_) {}
+      try { return await provider.connect({ onlyIfTrusted: false }); } catch (e1) {
+        try { if (typeof provider.request === "function") { const r = await provider.request({ method: "connect" }); if (r && r.publicKey) return r; if (provider.publicKey) return { publicKey: provider.publicKey }; } } catch (e2) {}
+        throw e1;
+      }
+    }
+
+    async function connectPhantom(e) {
+      try {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        if (!explainEnvironmentIfBad()) return;
+        const provider = getPhantomProvider();
+        if (!provider) { alert("Phantom wallet not found. Please install Phantom."); return; }
+        const resp = await doConnect(provider);
+        const publicKeyObj = resp?.publicKey || provider.publicKey;
+        if (!publicKeyObj) throw new Error("No publicKey returned.");
+        const publicKey = publicKeyObj.toString();
+        const nonceRes = await fetch("{% url 'phantom_nonce' %}", { credentials: "same-origin", headers: { "Accept": "application/json" } });
+        const nonceData = await nonceRes.json();
+        const message = nonceData.message;
+        const encoded = new TextEncoder().encode(message);
+        const signed = await provider.signMessage(encoded, "utf8");
+        const signatureBase58 = base58Encode(signed.signature);
+        const csrftoken = getCookie("csrftoken");
+        const verifyRes = await fetch("{% url 'phantom_verify' %}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRFToken": csrftoken || "" },
+          credentials: "same-origin",
+          body: JSON.stringify({ publicKey, signature: signatureBase58, message })
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok || !verifyData.ok) { alert("Login failed: " + (verifyData.error || "unknown")); return; }
+        window.location.reload();
+      } catch (err) {
+        console.error("Phantom mobile error:", err);
+        alert("Wallet login error: " + (err?.message || String(err)));
+      }
+    }
+
+    if (connectBtn) {
+      connectBtn.addEventListener("click", connectPhantom, { capture: true });
+    }
+  })();
+  </script>
+
+
+  <footer class="lhx-footer mt-4">
+    <div class="container">
+      <div class="lhx-footer-inner">
+        <div class="lhx-footer-left">© LinkHash</div>
+        <div class="lhx-footer-center" style="font-size:11px;">Crypto incubator · Accelerator · Web3.0 games</div>
+        <div class="lhx-footer-right">
+          <div class="lhx-footer-company">LINKHASH CORP</div>
+          <div>DOVER, DE 19901</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% if submissions %}
+  <div class="d-flex flex-column gap-2">
+    {% for s in submissions %}
+      <div class="lhx-card p-3" style="border-style:dashed;">
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+          <div class="lhx-muted small">
+            👤 <span class="lhx-mono">{{ s.submitter_wallet }}</span>
+          </div>
+          <div class="lhx-muted small">
+            {{ s.created_at|date:"Y-m-d H:i" }} · Status: <span class="lhx-mono">{{ s.status|capfirst }}</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="lhx-muted small">No submissions yet.</div>
+{% endif %}

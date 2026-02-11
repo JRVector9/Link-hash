@@ -1,0 +1,8 @@
+<div class="alert alert-success mb-0">
+  ✅ Submission success! ({{ submitter_wallet|slice:":6" }}...{{ submitter_wallet|slice:"-6:" }})
+</div>
+
+<div hx-get="{% url 'campaign_submissions_partial' campaign.id %}"
+     hx-target="#submissionsWrap"
+     hx-swap="innerHTML"
+     hx-trigger="load"></div>

@@ -1,0 +1,43 @@
+<div class="lhx-card p-4 h-100 w-100">
+  <!-- Forced Yellow Header for Consistency -->
+  <div class="lhx-table-header" style="color: #ffda57;">
+    {{ title }}
+  </div>
+  <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+    <table class="table table-sm table-dark table-hover align-middle mb-0 small lhx-game-font">
+      <thead>
+        <tr class="text-secondary">
+          <th>Winner</th>
+          {% if show_nums %}<th>Numbers</th>{% endif %}
+          {% if show_bets %}<th>Bets #</th>{% endif %}
+          {% if show_last_bet %}<th>Last Bet</th>{% endif %}
+          <th class="text-end">Pot</th>
+          <th class="text-end">Ended</th>
+        </tr>
+      </thead>
+      <tbody id="{% if game_id %}past-results-body-{{ game_id }}{% else %}past-results-body-generic{% endif %}">
+        {% for row in data %}
+        <tr>
+          <td class="lhx-mono text-white">{{ row.winner }}</td>
+
+          {% if show_nums %}
+            <td class="lhx-accent">{{ row.nums }}</td>
+          {% endif %}
+
+          {% if show_bets %}
+            <td class="text-white">{{ row.bets }}</td>
+          {% endif %}
+
+          {% if show_last_bet %}
+            <td class="text-white">{{ row.last_bet }}</td>
+          {% endif %}
+
+          <td class="text-end fw-bold lhx-accent">{{ row.pot }}</td>
+          <td class="text-end text-secondary">{{ row.ended }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+  </div>
+</div>
