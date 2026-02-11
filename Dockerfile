@@ -29,14 +29,20 @@ COPY . .
 # Create directories for static and media files
 RUN mkdir -p staticfiles media
 
-# Create entrypoint script
+# Create entrypoint script with error handling
 RUN echo '#!/bin/bash\n\
 set -e\n\
-echo "Collecting static files..."\n\
-python manage.py collectstatic --noinput\n\
-echo "Running migrations..."\n\
-python manage.py migrate --noinput\n\
-echo "Starting Daphne server..."\n\
+echo "========================================"\n\
+echo "Starting Link-hash application..."\n\
+echo "========================================"\n\
+\n\
+echo "Step 1: Collecting static files..."\n\
+python manage.py collectstatic --noinput || echo "Warning: collectstatic failed, continuing..."\n\
+\n\
+echo "Step 2: Running migrations..."\n\
+python manage.py migrate --noinput || echo "Warning: migrate failed, continuing..."\n\
+\n\
+echo "Step 3: Starting Daphne server on 0.0.0.0:8000..."\n\
 exec daphne -b 0.0.0.0 -p 8000 config.asgi:application\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
