@@ -13,6 +13,63 @@
   <!-- Theme -->
   <link rel="stylesheet" href="{% static 'market/theme.css' %}?v=1011">
 
+  <!-- Mobile responsive styles -->
+  <style>
+    @media (max-width: 768px) {
+      .container {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+
+      .lhx-nav {
+        padding: 10px 0 !important;
+      }
+
+      .lhx-nav .container {
+        flex-wrap: wrap;
+      }
+
+      .lhx-navlink {
+        font-size: 14px;
+        padding: 8px 12px !important;
+      }
+
+      .lhx-h1 {
+        font-size: 28px !important;
+        line-height: 1.3 !important;
+      }
+
+      .lhx-h2 {
+        font-size: 22px !important;
+      }
+
+      .lhx-card {
+        padding: 16px !important;
+      }
+
+      .lhx-table {
+        font-size: 13px;
+      }
+
+      .lhx-logo {
+        width: 48px !important;
+        height: 48px !important;
+      }
+
+      /* Hide some elements on mobile */
+      .d-md-block {
+        display: none !important;
+      }
+
+      /* Stack cards vertically */
+      .row > [class*='col-'] {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+
   <!-- ✅ Solana + bs58 MUST be loaded BEFORE login script -->
   <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
 
