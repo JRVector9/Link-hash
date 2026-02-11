@@ -37,6 +37,29 @@
       /* Show hamburger button */
       .lhx-hamburger {
         display: flex !important;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 44px;
+        height: 44px;
+        padding: 10px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background 0.2s;
+      }
+
+      .lhx-hamburger:active {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .hamburger-line {
+        display: block;
+        width: 100%;
+        height: 3px;
+        background: #00ffa3;
+        border-radius: 2px;
+        transition: all 0.3s ease;
       }
 
       /* Mobile menu overlay */
@@ -125,6 +148,82 @@
         flex: 0 0 100% !important;
         max-width: 100% !important;
       }
+
+      /* Fix card padding issues */
+      .lhx-card {
+        overflow: hidden;
+      }
+
+      .lhx-card table {
+        margin: 0 !important;
+      }
+
+      .lhx-card .table {
+        margin-bottom: 0 !important;
+      }
+
+      /* Remove gaps in cards */
+      .lhx-card.p-0 {
+        padding: 0 !important;
+      }
+
+      .lhx-card.p-0 > * {
+        margin: 0 !important;
+      }
+
+      /* Table inside cards - no spacing */
+      .table-dark {
+        background-color: var(--lhx-card) !important;
+      }
+
+      .table > :not(caption) > * > * {
+        padding: 12px 16px !important;
+        background-color: transparent !important;
+      }
+    }
+  </style>
+
+  <!-- Global card fixes (all screen sizes) -->
+  <style>
+    /* Ensure cards have no internal gaps */
+    .lhx-card {
+      display: block;
+      overflow: hidden;
+    }
+
+    .lhx-card.p-0 {
+      padding: 0;
+    }
+
+    /* Tables in cards should have no margin */
+    .lhx-card table,
+    .lhx-card .table {
+      margin: 0;
+      border-collapse: collapse;
+    }
+
+    /* First and last rows should align to card edges */
+    .lhx-card .table tbody tr:first-child td {
+      border-top: none;
+    }
+
+    .lhx-card .table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Remove Bootstrap table borders inside cards */
+    .lhx-card .table-dark {
+      --bs-table-bg: transparent;
+      --bs-table-border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Ensure table background matches card */
+    .table-dark {
+      background-color: var(--lhx-card);
+    }
+
+    .table-dark tbody {
+      background-color: transparent;
     }
   </style>
 
@@ -160,9 +259,9 @@
 
       <!-- Hamburger button (hidden on desktop) -->
       <button class="lhx-hamburger" style="display: none;" id="mobileMenuBtn" type="button">
-        <span style="display:block;width:24px;height:2px;background:#fff;margin:5px 0;"></span>
-        <span style="display:block;width:24px;height:2px;background:#fff;margin:5px 0;"></span>
-        <span style="display:block;width:24px;height:2px;background:#fff;margin:5px 0;"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
       </button>
 
       <!-- Desktop menu -->
