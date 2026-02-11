@@ -39,10 +39,13 @@ echo "========================================"\n\
 echo "Step 1: Collecting static files..."\n\
 python manage.py collectstatic --noinput || echo "Warning: collectstatic failed, continuing..."\n\
 \n\
-echo "Step 2: Running migrations..."\n\
+echo "Step 2: Creating migrations..."\n\
+python manage.py makemigrations || echo "Warning: makemigrations failed, continuing..."\n\
+\n\
+echo "Step 3: Running migrations..."\n\
 python manage.py migrate --noinput || echo "Warning: migrate failed, continuing..."\n\
 \n\
-echo "Step 3: Starting Daphne server on 0.0.0.0:8000..."\n\
+echo "Step 4: Starting Daphne server on 0.0.0.0:8000..."\n\
 exec daphne -b 0.0.0.0 -p 8000 config.asgi:application\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
